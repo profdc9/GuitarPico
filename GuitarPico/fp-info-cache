@@ -1,1163 +1,680 @@
-278002233083497
-MountingHole
-MountingHole_2.1mm
-Mounting Hole 2.1mm, no annular
-mounting hole 2.1mm no annular
+162447088533091
+Button_Switch_THT
+KSA_Tactile_SPST
+KSA http://www.ckswitches.com/media/1457/ksa_ksl.pdf
+SWITCH SMD KSA SW
 0
+5
+5
+Button_Switch_THT
+Nidec_Copal_SH-7010C
+4-bit rotary coded switch, through-hole, https://www.nidec-copal-electronics.com/e/catalog/switch/sh-7000.pdf
+rotary switch bcd
 0
+6
+5
+Button_Switch_THT
+Push_E-Switch_KS01Q01
+E-Switch KS01Q01 http://spec_sheets.e-switch.com/specs/29-KS01Q01.pdf
+Push Button
 0
-MountingHole
-MountingHole_2.2mm_M2
-Mounting Hole 2.2mm, no annular, M2
-mounting hole 2.2mm no annular m2
-0
-0
-0
-MountingHole
-MountingHole_2.2mm_M2_DIN965
-Mounting Hole 2.2mm, no annular, M2, DIN965
-mounting hole 2.2mm no annular m2 din965
-0
-0
-0
-MountingHole
-MountingHole_2.2mm_M2_DIN965_Pad
-Mounting Hole 2.2mm, M2, DIN965
-mounting hole 2.2mm m2 din965
-0
-1
-1
-MountingHole
-MountingHole_2.2mm_M2_DIN965_Pad_TopBottom
-Mounting Hole 2.2mm, M2, DIN965
-mounting hole 2.2mm m2 din965
-0
-3
-1
-MountingHole
-MountingHole_2.2mm_M2_DIN965_Pad_TopOnly
-Mounting Hole 2.2mm, M2, DIN965
-mounting hole 2.2mm m2 din965
+4
+4
+Button_Switch_THT
+SW_CW_GPTS203211B
+SPST Off-On Pushbutton, 1A, 30V, CW Industries P/N GPTS203211B, http://switches-connectors-custom.cwind.com/Asset/GPTS203211BR2.pdf
+SPST button switch Off-On
 0
 2
-1
-MountingHole
-MountingHole_2.2mm_M2_ISO7380
-Mounting Hole 2.2mm, no annular, M2, ISO7380
-mounting hole 2.2mm no annular m2 iso7380
+2
+Button_Switch_THT
+SW_CuK_JS202011AQN_DPDT_Angled
+CuK sub miniature slide switch, JS series, DPDT, right angle, http://www.ckswitches.com/media/1422/js.pdf
+switch DPDT
 0
+6
+6
+Button_Switch_THT
+SW_CuK_JS202011CQN_DPDT_Straight
+CuK sub miniature slide switch, JS series, DPDT, right angle, http://www.ckswitches.com/media/1422/js.pdf
+switch DPDT
 0
+6
+6
+Button_Switch_THT
+SW_CuK_OS102011MA1QN1_SPDT_Angled
+CuK miniature slide switch, OS series, SPDT, right angle, http://www.ckswitches.com/media/1428/os.pdf
+switch SPDT
 0
-MountingHole
-MountingHole_2.2mm_M2_ISO7380_Pad
-Mounting Hole 2.2mm, M2, ISO7380
-mounting hole 2.2mm m2 iso7380
-0
-1
-1
-MountingHole
-MountingHole_2.2mm_M2_ISO7380_Pad_TopBottom
-Mounting Hole 2.2mm, M2, ISO7380
-mounting hole 2.2mm m2 iso7380
-0
+5
 3
-1
-MountingHole
-MountingHole_2.2mm_M2_ISO7380_Pad_TopOnly
-Mounting Hole 2.2mm, M2, ISO7380
-mounting hole 2.2mm m2 iso7380
+Button_Switch_THT
+SW_DIP_SPSTx01_Piano_10.8x4.1mm_W7.62mm_P2.54mm
+1x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x4.1mm
+DIP Switch SPST Piano 7.62mm 300mil
 0
 2
-1
-MountingHole
-MountingHole_2.2mm_M2_ISO14580
-Mounting Hole 2.2mm, no annular, M2, ISO14580
-mounting hole 2.2mm no annular m2 iso14580
-0
-0
-0
-MountingHole
-MountingHole_2.2mm_M2_ISO14580_Pad
-Mounting Hole 2.2mm, M2, ISO14580
-mounting hole 2.2mm m2 iso14580
-0
-1
-1
-MountingHole
-MountingHole_2.2mm_M2_ISO14580_Pad_TopBottom
-Mounting Hole 2.2mm, M2, ISO14580
-mounting hole 2.2mm m2 iso14580
-0
-3
-1
-MountingHole
-MountingHole_2.2mm_M2_ISO14580_Pad_TopOnly
-Mounting Hole 2.2mm, M2, ISO14580
-mounting hole 2.2mm m2 iso14580
+2
+Button_Switch_THT
+SW_DIP_SPSTx01_Slide_6.7x4.1mm_W7.62mm_P2.54mm_LowProfile
+1x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x4.1mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
 0
 2
-1
-MountingHole
-MountingHole_2.2mm_M2_Pad
-Mounting Hole 2.2mm, M2
-mounting hole 2.2mm m2
-0
-1
-1
-MountingHole
-MountingHole_2.2mm_M2_Pad_TopBottom
-Mounting Hole 2.2mm, M2
-mounting hole 2.2mm m2
-0
-3
-1
-MountingHole
-MountingHole_2.2mm_M2_Pad_TopOnly
-Mounting Hole 2.2mm, M2
-mounting hole 2.2mm m2
+2
+Button_Switch_THT
+SW_DIP_SPSTx01_Slide_9.78x4.72mm_W7.62mm_P2.54mm
+1x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x4.72mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
 0
 2
-1
-MountingHole
-MountingHole_2.2mm_M2_Pad_Via
-Mounting Hole 2.2mm, M2
-mounting hole 2.2mm m2
-0
-9
-1
-MountingHole
-MountingHole_2.5mm
-Mounting Hole 2.5mm, no annular
-mounting hole 2.5mm no annular
-0
-0
-0
-MountingHole
-MountingHole_2.5mm_Pad
-Mounting Hole 2.5mm
-mounting hole 2.5mm
-0
-1
-1
-MountingHole
-MountingHole_2.5mm_Pad_TopBottom
-Mounting Hole 2.5mm
-mounting hole 2.5mm
-0
-3
-1
-MountingHole
-MountingHole_2.5mm_Pad_TopOnly
-Mounting Hole 2.5mm
-mounting hole 2.5mm
-0
 2
-1
-MountingHole
-MountingHole_2.5mm_Pad_Via
-Mounting Hole 2.5mm
-mounting hole 2.5mm
+Button_Switch_THT
+SW_DIP_SPSTx02_Piano_10.8x6.64mm_W7.62mm_P2.54mm
+2x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x6.64mm
+DIP Switch SPST Piano 7.62mm 300mil
 0
-9
-1
-MountingHole
-MountingHole_2.7mm
-Mounting Hole 2.7mm, no annular
-mounting hole 2.7mm no annular
+4
+4
+Button_Switch_THT
+SW_DIP_SPSTx02_Piano_CTS_Series194-2MSTN_W7.62mm_P2.54mm
+2x-dip-switch SPST CTS_Series194-2MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
 0
+4
+4
+Button_Switch_THT
+SW_DIP_SPSTx02_Slide_6.7x6.64mm_W7.62mm_P2.54mm_LowProfile
+2x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x6.64mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
 0
+4
+4
+Button_Switch_THT
+SW_DIP_SPSTx02_Slide_9.78x7.26mm_W7.62mm_P2.54mm
+2x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x7.26mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
 0
-MountingHole
-MountingHole_2.7mm_M2.5
-Mounting Hole 2.7mm, no annular, M2.5
-mounting hole 2.7mm no annular m2.5
+4
+4
+Button_Switch_THT
+SW_DIP_SPSTx03_Piano_10.8x9.18mm_W7.62mm_P2.54mm
+3x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x9.18mm
+DIP Switch SPST Piano 7.62mm 300mil
 0
+6
+6
+Button_Switch_THT
+SW_DIP_SPSTx03_Piano_CTS_Series194-3MSTN_W7.62mm_P2.54mm
+3x-dip-switch SPST CTS_Series194-3MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
 0
+6
+6
+Button_Switch_THT
+SW_DIP_SPSTx03_Slide_6.7x9.18mm_W7.62mm_P2.54mm_LowProfile
+3x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x9.18mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
 0
-MountingHole
-MountingHole_2.7mm_M2.5_DIN965
-Mounting Hole 2.7mm, no annular, M2.5, DIN965
-mounting hole 2.7mm no annular m2.5 din965
+6
+6
+Button_Switch_THT
+SW_DIP_SPSTx03_Slide_9.78x9.8mm_W7.62mm_P2.54mm
+3x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x9.8mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
 0
+6
+6
+Button_Switch_THT
+SW_DIP_SPSTx04_Piano_10.8x11.72mm_W7.62mm_P2.54mm
+4x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x11.72mm
+DIP Switch SPST Piano 7.62mm 300mil
 0
+8
+8
+Button_Switch_THT
+SW_DIP_SPSTx04_Piano_CTS_Series194-4MSTN_W7.62mm_P2.54mm
+4x-dip-switch SPST CTS_Series194-4MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
 0
-MountingHole
-MountingHole_2.7mm_M2.5_DIN965_Pad
-Mounting Hole 2.7mm, M2.5, DIN965
-mounting hole 2.7mm m2.5 din965
+8
+8
+Button_Switch_THT
+SW_DIP_SPSTx04_Slide_6.7x11.72mm_W7.62mm_P2.54mm_LowProfile
+4x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x11.72mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
 0
-1
-1
-MountingHole
-MountingHole_2.7mm_M2.5_DIN965_Pad_TopBottom
-Mounting Hole 2.7mm, M2.5, DIN965
-mounting hole 2.7mm m2.5 din965
+8
+8
+Button_Switch_THT
+SW_DIP_SPSTx04_Slide_9.78x12.34mm_W7.62mm_P2.54mm
+4x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x12.34mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
 0
+8
+8
+Button_Switch_THT
+SW_DIP_SPSTx05_Piano_10.8x14.26mm_W7.62mm_P2.54mm
+5x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x14.26mm
+DIP Switch SPST Piano 7.62mm 300mil
+0
+10
+10
+Button_Switch_THT
+SW_DIP_SPSTx05_Piano_CTS_Series194-5MSTN_W7.62mm_P2.54mm
+5x-dip-switch SPST CTS_Series194-5MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
+0
+10
+10
+Button_Switch_THT
+SW_DIP_SPSTx05_Slide_6.7x14.26mm_W7.62mm_P2.54mm_LowProfile
+5x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x14.26mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
+0
+10
+10
+Button_Switch_THT
+SW_DIP_SPSTx05_Slide_9.78x14.88mm_W7.62mm_P2.54mm
+5x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x14.88mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
+0
+10
+10
+Button_Switch_THT
+SW_DIP_SPSTx06_Piano_10.8x16.8mm_W7.62mm_P2.54mm
+6x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x16.8mm
+DIP Switch SPST Piano 7.62mm 300mil
+0
+12
+12
+Button_Switch_THT
+SW_DIP_SPSTx06_Piano_CTS_Series194-6MSTN_W7.62mm_P2.54mm
+6x-dip-switch SPST CTS_Series194-6MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
+0
+12
+12
+Button_Switch_THT
+SW_DIP_SPSTx06_Slide_6.7x16.8mm_W7.62mm_P2.54mm_LowProfile
+6x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x16.8mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
+0
+12
+12
+Button_Switch_THT
+SW_DIP_SPSTx06_Slide_9.78x17.42mm_W7.62mm_P2.54mm
+6x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x17.42mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
+0
+12
+12
+Button_Switch_THT
+SW_DIP_SPSTx07_Piano_10.8x19.34mm_W7.62mm_P2.54mm
+7x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x19.34mm
+DIP Switch SPST Piano 7.62mm 300mil
+0
+14
+14
+Button_Switch_THT
+SW_DIP_SPSTx07_Piano_CTS_Series194-7MSTN_W7.62mm_P2.54mm
+7x-dip-switch SPST CTS_Series194-7MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
+0
+14
+14
+Button_Switch_THT
+SW_DIP_SPSTx07_Slide_6.7x19.34mm_W7.62mm_P2.54mm_LowProfile
+7x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x19.34mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
+0
+14
+14
+Button_Switch_THT
+SW_DIP_SPSTx07_Slide_9.78x19.96mm_W7.62mm_P2.54mm
+7x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x19.96mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
+0
+14
+14
+Button_Switch_THT
+SW_DIP_SPSTx08_Piano_10.8x21.88mm_W7.62mm_P2.54mm
+8x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x21.88mm
+DIP Switch SPST Piano 7.62mm 300mil
+0
+16
+16
+Button_Switch_THT
+SW_DIP_SPSTx08_Piano_CTS_Series194-8MSTN_W7.62mm_P2.54mm
+8x-dip-switch SPST CTS_Series194-8MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
+0
+16
+16
+Button_Switch_THT
+SW_DIP_SPSTx08_Slide_6.7x21.88mm_W7.62mm_P2.54mm_LowProfile
+8x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x21.88mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
+0
+16
+16
+Button_Switch_THT
+SW_DIP_SPSTx08_Slide_9.78x22.5mm_W7.62mm_P2.54mm
+8x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x22.5mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
+0
+16
+16
+Button_Switch_THT
+SW_DIP_SPSTx09_Piano_10.8x24.42mm_W7.62mm_P2.54mm
+9x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x24.42mm
+DIP Switch SPST Piano 7.62mm 300mil
+0
+18
+18
+Button_Switch_THT
+SW_DIP_SPSTx09_Piano_CTS_Series194-9MSTN_W7.62mm_P2.54mm
+9x-dip-switch SPST CTS_Series194-9MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
+0
+18
+18
+Button_Switch_THT
+SW_DIP_SPSTx09_Slide_6.7x24.42mm_W7.62mm_P2.54mm_LowProfile
+9x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x24.42mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
+0
+18
+18
+Button_Switch_THT
+SW_DIP_SPSTx09_Slide_9.78x25.04mm_W7.62mm_P2.54mm
+9x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x25.04mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
+0
+18
+18
+Button_Switch_THT
+SW_DIP_SPSTx10_Piano_10.8x26.96mm_W7.62mm_P2.54mm
+10x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x26.96mm
+DIP Switch SPST Piano 7.62mm 300mil
+0
+20
+20
+Button_Switch_THT
+SW_DIP_SPSTx10_Piano_CTS_Series194-10MSTN_W7.62mm_P2.54mm
+10x-dip-switch SPST CTS_Series194-10MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
+0
+20
+20
+Button_Switch_THT
+SW_DIP_SPSTx10_Slide_6.7x26.96mm_W7.62mm_P2.54mm_LowProfile
+10x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x26.96mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
+0
+20
+20
+Button_Switch_THT
+SW_DIP_SPSTx10_Slide_9.78x27.58mm_W7.62mm_P2.54mm
+10x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x27.58mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
+0
+20
+20
+Button_Switch_THT
+SW_DIP_SPSTx11_Piano_10.8x29.5mm_W7.62mm_P2.54mm
+11x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x29.5mm
+DIP Switch SPST Piano 7.62mm 300mil
+0
+22
+22
+Button_Switch_THT
+SW_DIP_SPSTx11_Piano_CTS_Series194-11MSTN_W7.62mm_P2.54mm
+11x-dip-switch SPST CTS_Series194-11MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
+0
+22
+22
+Button_Switch_THT
+SW_DIP_SPSTx11_Slide_6.7x29.5mm_W7.62mm_P2.54mm_LowProfile
+11x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x29.5mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
+0
+22
+22
+Button_Switch_THT
+SW_DIP_SPSTx11_Slide_9.78x30.12mm_W7.62mm_P2.54mm
+11x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x30.12mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
+0
+22
+22
+Button_Switch_THT
+SW_DIP_SPSTx12_Piano_10.8x32.04mm_W7.62mm_P2.54mm
+12x-dip-switch SPST , Piano, row spacing 7.62 mm (300 mils), body size 10.8x32.04mm
+DIP Switch SPST Piano 7.62mm 300mil
+0
+24
+24
+Button_Switch_THT
+SW_DIP_SPSTx12_Piano_CTS_Series194-12MSTN_W7.62mm_P2.54mm
+12x-dip-switch SPST CTS_Series194-12MSTN, Piano, row spacing 7.62 mm (300 mils), body size  (see https://www.ctscorp.com/wp-content/uploads/194-195.pdf)
+DIP Switch SPST Piano 7.62mm 300mil
+0
+24
+24
+Button_Switch_THT
+SW_DIP_SPSTx12_Slide_6.7x32.04mm_W7.62mm_P2.54mm_LowProfile
+12x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 6.7x32.04mm (see e.g. https://www.ctscorp.com/wp-content/uploads/209-210.pdf), LowProfile
+DIP Switch SPST Slide 7.62mm 300mil LowProfile
+0
+24
+24
+Button_Switch_THT
+SW_DIP_SPSTx12_Slide_9.78x32.66mm_W7.62mm_P2.54mm
+12x-dip-switch SPST , Slide, row spacing 7.62 mm (300 mils), body size 9.78x32.66mm (see e.g. https://www.ctscorp.com/wp-content/uploads/206-208.pdf)
+DIP Switch SPST Slide 7.62mm 300mil
+0
+24
+24
+Button_Switch_THT
+SW_E-Switch_EG1224_SPDT_Angled
+E-Switch slide switch, EG series, SPDT, right angle, http://spec_sheets.e-switch.com/specs/P040042.pdf
+switch SPDT
+0
+7
 3
-1
-MountingHole
-MountingHole_2.7mm_M2.5_DIN965_Pad_TopOnly
-Mounting Hole 2.7mm, M2.5, DIN965
-mounting hole 2.7mm m2.5 din965
+Button_Switch_THT
+SW_E-Switch_EG1271_SPDT
+E-Switch sub miniature slide switch, EG series, SPDT, http://spec_sheets.e-switch.com/specs/P040047.pdf
+switch DPDT
 0
-2
-1
-MountingHole
-MountingHole_2.7mm_M2.5_ISO7380
-Mounting Hole 2.7mm, no annular, M2.5, ISO7380
-mounting hole 2.7mm no annular m2.5 iso7380
+6
+6
+Button_Switch_THT
+SW_E-Switch_EG2219_DPDT_Angled
+E-Switch slide switch, EG series, DPDT, right angle, http://spec_sheets.e-switch.com/specs/P040170.pdf
+switch DPDT
 0
+10
+6
+Button_Switch_THT
+SW_Lever_1P2T_NKK_GW12LxH
+Switch, single pole double throw, right angle, http://www.nkkswitches.com/pdf/GW.pdf
+switch single-pole double-throw spdt ON-ON horizontal
 0
-0
-MountingHole
-MountingHole_2.7mm_M2.5_ISO7380_Pad
-Mounting Hole 2.7mm, M2.5, ISO7380
-mounting hole 2.7mm m2.5 iso7380
-0
-1
-1
-MountingHole
-MountingHole_2.7mm_M2.5_ISO7380_Pad_TopBottom
-Mounting Hole 2.7mm, M2.5, ISO7380
-mounting hole 2.7mm m2.5 iso7380
-0
+5
 3
-1
-MountingHole
-MountingHole_2.7mm_M2.5_ISO7380_Pad_TopOnly
-Mounting Hole 2.7mm, M2.5, ISO7380
-mounting hole 2.7mm m2.5 iso7380
+Button_Switch_THT
+SW_MEC_5GTH9
+MEC 5G single pole normally-open tactile switch https://cdn.sos.sk/productdata/80/f6/aabf7be6/5gth9358222.pdf
+switch normally-open pushbutton push-button
 0
+4
 2
-1
-MountingHole
-MountingHole_2.7mm_M2.5_ISO14580
-Mounting Hole 2.7mm, no annular, M2.5, ISO14580
-mounting hole 2.7mm no annular m2.5 iso14580
+Button_Switch_THT
+SW_NKK_BB15AH
+https://www.nkkswitches.com/pdf/Bpushbuttons-1.pdf
+Pushbutton Right-angle
 0
-0
-0
-MountingHole
-MountingHole_2.7mm_M2.5_ISO14580_Pad
-Mounting Hole 2.7mm, M2.5, ISO14580
-mounting hole 2.7mm m2.5 iso14580
-0
-1
-1
-MountingHole
-MountingHole_2.7mm_M2.5_ISO14580_Pad_TopBottom
-Mounting Hole 2.7mm, M2.5, ISO14580
-mounting hole 2.7mm m2.5 iso14580
-0
+5
 3
-1
-MountingHole
-MountingHole_2.7mm_M2.5_ISO14580_Pad_TopOnly
-Mounting Hole 2.7mm, M2.5, ISO14580
-mounting hole 2.7mm m2.5 iso14580
+Button_Switch_THT
+SW_NKK_G1xJP
+Switch NKK G1xJP http://www.nkkswitches.com/pdf/gwillum.pdf
+SWITCH TOGGLE ILLUM SPDT NKK
 0
+6
+6
+Button_Switch_THT
+SW_NKK_GW12LJP
+Switch, single pole double throw, illuminated paddle, http://www.nkkswitches.com/pdf/gwillum.pdf
+switch single-pole double-throw spdt ON-ON illuminated LED
+0
+6
+6
+Button_Switch_THT
+SW_PUSH-12mm
+SW PUSH 12mm https://www.e-switch.com/system/asset/product_line/data_sheet/143/TL1100.pdf
+tact sw push 12mm
+0
+4
 2
-1
-MountingHole
-MountingHole_2.7mm_M2.5_Pad
-Mounting Hole 2.7mm, M2.5
-mounting hole 2.7mm m2.5
+Button_Switch_THT
+SW_PUSH-12mm_Wuerth-430476085716
+SW PUSH 12mm http://katalog.we-online.de/em/datasheet/430476085716.pdf
+tact sw push 12mm
 0
-1
-1
-MountingHole
-MountingHole_2.7mm_M2.5_Pad_TopBottom
-Mounting Hole 2.7mm, M2.5
-mounting hole 2.7mm m2.5
+4
+2
+Button_Switch_THT
+SW_PUSH_6mm
+https://www.omron.com/ecb/products/pdf/en-b3f.pdf
+tact sw push 6mm
 0
+4
+2
+Button_Switch_THT
+SW_PUSH_6mm_H4.3mm
+tactile push button, 6x6mm e.g. PHAP33xx series, height=4.3mm
+tact sw push 6mm
+0
+4
+2
+Button_Switch_THT
+SW_PUSH_6mm_H5mm
+tactile push button, 6x6mm e.g. PHAP33xx series, height=5mm
+tact sw push 6mm
+0
+4
+2
+Button_Switch_THT
+SW_PUSH_6mm_H7.3mm
+tactile push button, 6x6mm e.g. PHAP33xx series, height=7.3mm
+tact sw push 6mm
+0
+4
+2
+Button_Switch_THT
+SW_PUSH_6mm_H8.5mm
+tactile push button, 6x6mm e.g. PHAP33xx series, height=8.5mm
+tact sw push 6mm
+0
+4
+2
+Button_Switch_THT
+SW_PUSH_6mm_H8mm
+tactile push button, 6x6mm e.g. PHAP33xx series, height=8mm
+tact sw push 6mm
+0
+4
+2
+Button_Switch_THT
+SW_PUSH_6mm_H9.5mm
+tactile push button, 6x6mm e.g. PHAP33xx series, height=9.5mm
+tact sw push 6mm
+0
+4
+2
+Button_Switch_THT
+SW_PUSH_6mm_H13mm
+tactile push button, 6x6mm e.g. PHAP33xx series, height=13mm
+tact sw push 6mm
+0
+4
+2
+Button_Switch_THT
+SW_PUSH_E-Switch_FS5700DP_DPDT
+FS5700 series pushbutton footswitch, DPDT, https://www.e-switch.com/system/asset/product_line/data_sheet/226/FS5700.pdf
+switch DPDT footswitch
+0
+6
+6
+Button_Switch_THT
+SW_PUSH_LCD_E3_SAxxxx
+Switch with LCD screen E3 SAxxxx
+switch normally-open pushbutton push-button LCD
+0
+6
+6
+Button_Switch_THT
+SW_PUSH_LCD_E3_SAxxxx_SocketPins
+Switch with LCD screen E3 SAxxxx
+switch normally-open pushbutton push-button LCD
+0
+6
+6
+Button_Switch_THT
+SW_Push_1P1T_NO_LED_E-Switch_TL1250
+illuminated right angle tact switch https://www.e-switch.com/system/asset/product_line/data_sheet/148/TL1250.pdf
+led push switch right angle
+0
+6
+4
+Button_Switch_THT
+SW_Push_1P2T_Vertical_E-Switch_800UDP8P1A1M6
+ right angle SPDT push button https://www.e-switch.com/system/asset/product_line/data_sheet/210/800U.pdf
+IP67 ultra-miniture horizontal
+0
+5
 3
-1
-MountingHole
-MountingHole_2.7mm_M2.5_Pad_TopOnly
-Mounting Hole 2.7mm, M2.5
-mounting hole 2.7mm m2.5
+Button_Switch_THT
+SW_Push_2P1T_Toggle_CK_PVA1xxH1xxxxxxV2
+momentary / push-push button, h=17.5mm C&K PVA1 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA1 DPST
 0
+4
+4
+Button_Switch_THT
+SW_Push_2P1T_Toggle_CK_PVA1xxH2xxxxxxV2
+momentary / push-push button, h=23mm C&K PVA1 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA1 DPST
+0
+4
+4
+Button_Switch_THT
+SW_Push_2P1T_Toggle_CK_PVA1xxH3xxxxxxV2
+momentary / push-push button, h=20.5mm C&K PVA1 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA1 DPST
+0
+4
+4
+Button_Switch_THT
+SW_Push_2P1T_Toggle_CK_PVA1xxH4xxxxxxV2
+momentary / push-push button, h=15mm C&K PVA1 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA1 DPST
+0
+4
+4
+Button_Switch_THT
+SW_Push_2P2T_Toggle_CK_PVA2OAH5xxxxxxV2
+momentary / push-push button, h=13mm C&K PVA2 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA2 DPDT
+0
+6
+6
+Button_Switch_THT
+SW_Push_2P2T_Toggle_CK_PVA2xxH1xxxxxxV2
+momentary / push-push button, h=17.5mm C&K PVA2 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA2 DPDT
+0
+6
+6
+Button_Switch_THT
+SW_Push_2P2T_Toggle_CK_PVA2xxH2xxxxxxV2
+momentary / push-push button, h=23mm C&K PVA2 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA2 DPDT
+0
+6
+6
+Button_Switch_THT
+SW_Push_2P2T_Toggle_CK_PVA2xxH3xxxxxxV2
+momentary / push-push button, h=20.5mm C&K PVA2 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA2 DPDT
+0
+6
+6
+Button_Switch_THT
+SW_Push_2P2T_Toggle_CK_PVA2xxH4xxxxxxV2
+momentary / push-push button, h=15mm C&K PVA2 https://www.ckswitches.com/media/1343/pva.pdf
+tact sw push PVA2 DPDT
+0
+6
+6
+Button_Switch_THT
+SW_Push_2P2T_Vertical_E-Switch_800UDP8P1A1M6
+ right angle DPDT push button https://www.e-switch.com/system/asset/product_line/data_sheet/210/800U.pdf
+IP67 ultra-miniture horizontal
+0
+8
+6
+Button_Switch_THT
+SW_SPST_Omron_B3F-315x_Angled
+tactile switch, 7.3mm x 6.25mm  x 7.4mm, right angle, https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3f.pdf
+tactile switch Omron B3F right angle through hole
+0
+4
 2
-1
-MountingHole
-MountingHole_2.7mm_M2.5_Pad_Via
-Mounting Hole 2.7mm
-mounting hole 2.7mm
+Button_Switch_THT
+SW_Slide_1P2T_CK_OS102011MS2Q
+CuK miniature slide switch, OS series, SPDT, https://www.ckswitches.com/media/1428/os.pdf
+switch SPDT
 0
-9
-1
-MountingHole
-MountingHole_2.7mm_Pad
-Mounting Hole 2.7mm
-mounting hole 2.7mm
-0
-1
-1
-MountingHole
-MountingHole_2.7mm_Pad_TopBottom
-Mounting Hole 2.7mm
-mounting hole 2.7mm
-0
+5
 3
-1
-MountingHole
-MountingHole_2.7mm_Pad_TopOnly
-Mounting Hole 2.7mm
-mounting hole 2.7mm
+Button_Switch_THT
+SW_TH_Tactile_Omron_B3F-10xx
+SW_TH_Tactile_Omron_B3F-10xx_https://www.omron.com/ecb/products/pdf/en-b3f.pdf
+Omron B3F-10xx
 0
+4
 2
-1
-MountingHole
-MountingHole_2.7mm_Pad_Via
-Mounting Hole 2.7mm
-mounting hole 2.7mm
+Button_Switch_THT
+SW_Tactile_SKHH_Angled
+tactile switch 6mm ALPS SKHH right angle http://www.alps.com/prod/info/E/HTML/Tact/SnapIn/SKHH/SKHHLUA010.html
+tactile switch 6mm ALPS SKHH right angle
 0
-9
-1
-MountingHole
-MountingHole_2mm
-Mounting Hole 2mm, no annular
-mounting hole 2mm no annular
-0
-0
-0
-MountingHole
-MountingHole_3.2mm_M3
-Mounting Hole 3.2mm, no annular, M3
-mounting hole 3.2mm no annular m3
-0
-0
-0
-MountingHole
-MountingHole_3.2mm_M3_DIN965
-Mounting Hole 3.2mm, no annular, M3, DIN965
-mounting hole 3.2mm no annular m3 din965
-0
-0
-0
-MountingHole
-MountingHole_3.2mm_M3_DIN965_Pad
-Mounting Hole 3.2mm, M3, DIN965
-mounting hole 3.2mm m3 din965
-0
-1
-1
-MountingHole
-MountingHole_3.2mm_M3_DIN965_Pad_TopBottom
-Mounting Hole 3.2mm, M3, DIN965
-mounting hole 3.2mm m3 din965
-0
-3
-1
-MountingHole
-MountingHole_3.2mm_M3_DIN965_Pad_TopOnly
-Mounting Hole 3.2mm, M3, DIN965
-mounting hole 3.2mm m3 din965
-0
+4
 2
-1
-MountingHole
-MountingHole_3.2mm_M3_ISO7380
-Mounting Hole 3.2mm, no annular, M3, ISO7380
-mounting hole 3.2mm no annular m3 iso7380
+Button_Switch_THT
+SW_Tactile_SPST_Angled_PTS645Vx31-2LFS
+tactile switch SPST right angle, PTS645VL31-2 LFS
+tactile switch SPST angled PTS645VL31-2 LFS C&K Button
 0
-0
-0
-MountingHole
-MountingHole_3.2mm_M3_ISO7380_Pad
-Mounting Hole 3.2mm, M3, ISO7380
-mounting hole 3.2mm m3 iso7380
-0
-1
-1
-MountingHole
-MountingHole_3.2mm_M3_ISO7380_Pad_TopBottom
-Mounting Hole 3.2mm, M3, ISO7380
-mounting hole 3.2mm m3 iso7380
-0
-3
-1
-MountingHole
-MountingHole_3.2mm_M3_ISO7380_Pad_TopOnly
-Mounting Hole 3.2mm, M3, ISO7380
-mounting hole 3.2mm m3 iso7380
-0
+4
 2
-1
-MountingHole
-MountingHole_3.2mm_M3_ISO14580
-Mounting Hole 3.2mm, no annular, M3, ISO14580
-mounting hole 3.2mm no annular m3 iso14580
+Button_Switch_THT
+SW_Tactile_SPST_Angled_PTS645Vx39-2LFS
+tactile switch SPST right angle, PTS645VL39-2 LFS
+tactile switch SPST angled PTS645VL39-2 LFS C&K Button
 0
-0
-0
-MountingHole
-MountingHole_3.2mm_M3_ISO14580_Pad
-Mounting Hole 3.2mm, M3, ISO14580
-mounting hole 3.2mm m3 iso14580
-0
-1
-1
-MountingHole
-MountingHole_3.2mm_M3_ISO14580_Pad_TopBottom
-Mounting Hole 3.2mm, M3, ISO14580
-mounting hole 3.2mm m3 iso14580
-0
-3
-1
-MountingHole
-MountingHole_3.2mm_M3_ISO14580_Pad_TopOnly
-Mounting Hole 3.2mm, M3, ISO14580
-mounting hole 3.2mm m3 iso14580
-0
+4
 2
-1
-MountingHole
-MountingHole_3.2mm_M3_Pad
-Mounting Hole 3.2mm, M3
-mounting hole 3.2mm m3
+Button_Switch_THT
+SW_Tactile_SPST_Angled_PTS645Vx58-2LFS
+tactile switch SPST right angle, PTS645VL58-2 LFS
+tactile switch SPST angled PTS645VL58-2 LFS C&K Button
 0
-1
-1
-MountingHole
-MountingHole_3.2mm_M3_Pad_TopBottom
-Mounting Hole 3.2mm, M3
-mounting hole 3.2mm m3
-0
-3
-1
-MountingHole
-MountingHole_3.2mm_M3_Pad_TopOnly
-Mounting Hole 3.2mm, M3
-mounting hole 3.2mm m3
-0
+4
 2
-1
-MountingHole
-MountingHole_3.2mm_M3_Pad_Via
-Mounting Hole 3.2mm, M3
-mounting hole 3.2mm m3
+Button_Switch_THT
+SW_Tactile_SPST_Angled_PTS645Vx83-2LFS
+tactile switch SPST right angle, PTS645VL83-2 LFS
+tactile switch SPST angled PTS645VL83-2 LFS C&K Button
 0
-9
-1
-MountingHole
-MountingHole_3.5mm
-Mounting Hole 3.5mm, no annular
-mounting hole 3.5mm no annular
-0
-0
-0
-MountingHole
-MountingHole_3.5mm_Pad
-Mounting Hole 3.5mm
-mounting hole 3.5mm
-0
-1
-1
-MountingHole
-MountingHole_3.5mm_Pad_TopBottom
-Mounting Hole 3.5mm
-mounting hole 3.5mm
-0
-3
-1
-MountingHole
-MountingHole_3.5mm_Pad_TopOnly
-Mounting Hole 3.5mm
-mounting hole 3.5mm
-0
+4
 2
-1
-MountingHole
-MountingHole_3.5mm_Pad_Via
-Mounting Hole 3.5mm
-mounting hole 3.5mm
+Button_Switch_THT
+SW_Tactile_Straight_KSA0Axx1LFTR
+SW PUSH SMALL http://www.ckswitches.com/media/1457/ksa_ksl.pdf
+SW PUSH SMALL Tactile C&K
 0
-9
-1
-MountingHole
-MountingHole_3.7mm
-Mounting Hole 3.7mm, no annular
-mounting hole 3.7mm no annular
-0
-0
-0
-MountingHole
-MountingHole_3.7mm_Pad
-Mounting Hole 3.7mm
-mounting hole 3.7mm
-0
-1
-1
-MountingHole
-MountingHole_3.7mm_Pad_TopBottom
-Mounting Hole 3.7mm
-mounting hole 3.7mm
-0
-3
-1
-MountingHole
-MountingHole_3.7mm_Pad_TopOnly
-Mounting Hole 3.7mm
-mounting hole 3.7mm
-0
+4
 2
-1
-MountingHole
-MountingHole_3.7mm_Pad_Via
-Mounting Hole 3.7mm
-mounting hole 3.7mm
+Button_Switch_THT
+SW_Tactile_Straight_KSL0Axx1LFTR
+SW PUSH SMALL http://www.ckswitches.com/media/1457/ksa_ksl.pdf
+SW PUSH SMALL Tactile C&K
 0
-9
-1
-MountingHole
-MountingHole_3mm
-Mounting Hole 3mm, no annular
-mounting hole 3mm no annular
-0
-0
-0
-MountingHole
-MountingHole_3mm_Pad
-Mounting Hole 3mm
-mounting hole 3mm
-0
-1
-1
-MountingHole
-MountingHole_3mm_Pad_TopBottom
-Mounting Hole 3mm
-mounting hole 3mm
-0
-3
-1
-MountingHole
-MountingHole_3mm_Pad_TopOnly
-Mounting Hole 3mm
-mounting hole 3mm
-0
+4
 2
-1
-MountingHole
-MountingHole_3mm_Pad_Via
-Mounting Hole 3mm
-mounting hole 3mm
-0
-9
-1
-MountingHole
-MountingHole_4.3mm_M4
-Mounting Hole 4.3mm, no annular, M4
-mounting hole 4.3mm no annular m4
-0
-0
-0
-MountingHole
-MountingHole_4.3mm_M4_DIN965
-Mounting Hole 4.3mm, no annular, M4, DIN965
-mounting hole 4.3mm no annular m4 din965
-0
-0
-0
-MountingHole
-MountingHole_4.3mm_M4_DIN965_Pad
-Mounting Hole 4.3mm, M4, DIN965
-mounting hole 4.3mm m4 din965
-0
-1
-1
-MountingHole
-MountingHole_4.3mm_M4_DIN965_Pad_TopBottom
-Mounting Hole 4.3mm, M4, DIN965
-mounting hole 4.3mm m4 din965
-0
-3
-1
-MountingHole
-MountingHole_4.3mm_M4_DIN965_Pad_TopOnly
-Mounting Hole 4.3mm, M4, DIN965
-mounting hole 4.3mm m4 din965
-0
-2
-1
-MountingHole
-MountingHole_4.3mm_M4_ISO7380
-Mounting Hole 4.3mm, no annular, M4, ISO7380
-mounting hole 4.3mm no annular m4 iso7380
-0
-0
-0
-MountingHole
-MountingHole_4.3mm_M4_ISO7380_Pad
-Mounting Hole 4.3mm, M4, ISO7380
-mounting hole 4.3mm m4 iso7380
-0
-1
-1
-MountingHole
-MountingHole_4.3mm_M4_ISO7380_Pad_TopBottom
-Mounting Hole 4.3mm, M4, ISO7380
-mounting hole 4.3mm m4 iso7380
-0
-3
-1
-MountingHole
-MountingHole_4.3mm_M4_ISO7380_Pad_TopOnly
-Mounting Hole 4.3mm, M4, ISO7380
-mounting hole 4.3mm m4 iso7380
-0
-2
-1
-MountingHole
-MountingHole_4.3mm_M4_ISO14580
-Mounting Hole 4.3mm, no annular, M4, ISO14580
-mounting hole 4.3mm no annular m4 iso14580
-0
-0
-0
-MountingHole
-MountingHole_4.3mm_M4_ISO14580_Pad
-Mounting Hole 4.3mm, M4, ISO14580
-mounting hole 4.3mm m4 iso14580
-0
-1
-1
-MountingHole
-MountingHole_4.3mm_M4_ISO14580_Pad_TopBottom
-Mounting Hole 4.3mm, M4, ISO14580
-mounting hole 4.3mm m4 iso14580
-0
-3
-1
-MountingHole
-MountingHole_4.3mm_M4_ISO14580_Pad_TopOnly
-Mounting Hole 4.3mm, M4, ISO14580
-mounting hole 4.3mm m4 iso14580
-0
-2
-1
-MountingHole
-MountingHole_4.3mm_M4_Pad
-Mounting Hole 4.3mm, M4
-mounting hole 4.3mm m4
-0
-1
-1
-MountingHole
-MountingHole_4.3mm_M4_Pad_TopBottom
-Mounting Hole 4.3mm, M4
-mounting hole 4.3mm m4
-0
-3
-1
-MountingHole
-MountingHole_4.3mm_M4_Pad_TopOnly
-Mounting Hole 4.3mm, M4
-mounting hole 4.3mm m4
-0
-2
-1
-MountingHole
-MountingHole_4.3mm_M4_Pad_Via
-Mounting Hole 4.3mm, M4
-mounting hole 4.3mm m4
-0
-9
-1
-MountingHole
-MountingHole_4.3x6.2mm_M4_Pad
-Mounting Hole 4.3x6.2mm, M4
-mounting hole 4.3x6.2mm m4
-0
-1
-1
-MountingHole
-MountingHole_4.3x6.2mm_M4_Pad_Via
-Mounting Hole 4.3x6.2mm, M4
-mounting hole 4.3x6.2mm m4
-0
-17
-1
-MountingHole
-MountingHole_4.5mm
-Mounting Hole 4.5mm, no annular
-mounting hole 4.5mm no annular
-0
-0
-0
-MountingHole
-MountingHole_4.5mm_Pad
-Mounting Hole 4.5mm
-mounting hole 4.5mm
-0
-1
-1
-MountingHole
-MountingHole_4.5mm_Pad_TopBottom
-Mounting Hole 4.5mm
-mounting hole 4.5mm
-0
-3
-1
-MountingHole
-MountingHole_4.5mm_Pad_TopOnly
-Mounting Hole 4.5mm
-mounting hole 4.5mm
-0
-2
-1
-MountingHole
-MountingHole_4.5mm_Pad_Via
-Mounting Hole 4.5mm
-mounting hole 4.5mm
-0
-9
-1
-MountingHole
-MountingHole_4mm
-Mounting Hole 4mm, no annular
-mounting hole 4mm no annular
-0
-0
-0
-MountingHole
-MountingHole_4mm_Pad
-Mounting Hole 4mm
-mounting hole 4mm
-0
-1
-1
-MountingHole
-MountingHole_4mm_Pad_TopBottom
-Mounting Hole 4mm
-mounting hole 4mm
-0
-3
-1
-MountingHole
-MountingHole_4mm_Pad_TopOnly
-Mounting Hole 4mm
-mounting hole 4mm
-0
-2
-1
-MountingHole
-MountingHole_4mm_Pad_Via
-Mounting Hole 4mm
-mounting hole 4mm
-0
-9
-1
-MountingHole
-MountingHole_5.3mm_M5
-Mounting Hole 5.3mm, no annular, M5
-mounting hole 5.3mm no annular m5
-0
-0
-0
-MountingHole
-MountingHole_5.3mm_M5_DIN965
-Mounting Hole 5.3mm, no annular, M5, DIN965
-mounting hole 5.3mm no annular m5 din965
-0
-0
-0
-MountingHole
-MountingHole_5.3mm_M5_DIN965_Pad
-Mounting Hole 5.3mm, M5, DIN965
-mounting hole 5.3mm m5 din965
-0
-1
-1
-MountingHole
-MountingHole_5.3mm_M5_DIN965_Pad_TopBottom
-Mounting Hole 5.3mm, M5, DIN965
-mounting hole 5.3mm m5 din965
-0
-3
-1
-MountingHole
-MountingHole_5.3mm_M5_DIN965_Pad_TopOnly
-Mounting Hole 5.3mm, M5, DIN965
-mounting hole 5.3mm m5 din965
-0
-2
-1
-MountingHole
-MountingHole_5.3mm_M5_ISO7380
-Mounting Hole 5.3mm, no annular, M5, ISO7380
-mounting hole 5.3mm no annular m5 iso7380
-0
-0
-0
-MountingHole
-MountingHole_5.3mm_M5_ISO7380_Pad
-Mounting Hole 5.3mm, M5, ISO7380
-mounting hole 5.3mm m5 iso7380
-0
-1
-1
-MountingHole
-MountingHole_5.3mm_M5_ISO7380_Pad_TopBottom
-Mounting Hole 5.3mm, M5, ISO7380
-mounting hole 5.3mm m5 iso7380
-0
-3
-1
-MountingHole
-MountingHole_5.3mm_M5_ISO7380_Pad_TopOnly
-Mounting Hole 5.3mm, M5, ISO7380
-mounting hole 5.3mm m5 iso7380
-0
-2
-1
-MountingHole
-MountingHole_5.3mm_M5_ISO14580
-Mounting Hole 5.3mm, no annular, M5, ISO14580
-mounting hole 5.3mm no annular m5 iso14580
-0
-0
-0
-MountingHole
-MountingHole_5.3mm_M5_ISO14580_Pad
-Mounting Hole 5.3mm, M5, ISO14580
-mounting hole 5.3mm m5 iso14580
-0
-1
-1
-MountingHole
-MountingHole_5.3mm_M5_ISO14580_Pad_TopBottom
-Mounting Hole 5.3mm, M5, ISO14580
-mounting hole 5.3mm m5 iso14580
-0
-3
-1
-MountingHole
-MountingHole_5.3mm_M5_ISO14580_Pad_TopOnly
-Mounting Hole 5.3mm, M5, ISO14580
-mounting hole 5.3mm m5 iso14580
-0
-2
-1
-MountingHole
-MountingHole_5.3mm_M5_Pad
-Mounting Hole 5.3mm, M5
-mounting hole 5.3mm m5
-0
-1
-1
-MountingHole
-MountingHole_5.3mm_M5_Pad_TopBottom
-Mounting Hole 5.3mm, M5
-mounting hole 5.3mm m5
-0
-3
-1
-MountingHole
-MountingHole_5.3mm_M5_Pad_TopOnly
-Mounting Hole 5.3mm, M5
-mounting hole 5.3mm m5
-0
-2
-1
-MountingHole
-MountingHole_5.3mm_M5_Pad_Via
-Mounting Hole 5.3mm, M5
-mounting hole 5.3mm m5
-0
-9
-1
-MountingHole
-MountingHole_5.5mm
-Mounting Hole 5.5mm, no annular
-mounting hole 5.5mm no annular
-0
-0
-0
-MountingHole
-MountingHole_5.5mm_Pad
-Mounting Hole 5.5mm
-mounting hole 5.5mm
-0
-1
-1
-MountingHole
-MountingHole_5.5mm_Pad_TopBottom
-Mounting Hole 5.5mm
-mounting hole 5.5mm
-0
-3
-1
-MountingHole
-MountingHole_5.5mm_Pad_TopOnly
-Mounting Hole 5.5mm
-mounting hole 5.5mm
-0
-2
-1
-MountingHole
-MountingHole_5.5mm_Pad_Via
-Mounting Hole 5.5mm
-mounting hole 5.5mm
-0
-9
-1
-MountingHole
-MountingHole_5mm
-Mounting Hole 5mm, no annular
-mounting hole 5mm no annular
-0
-0
-0
-MountingHole
-MountingHole_5mm_Pad
-Mounting Hole 5mm
-mounting hole 5mm
-0
-1
-1
-MountingHole
-MountingHole_5mm_Pad_TopBottom
-Mounting Hole 5mm
-mounting hole 5mm
-0
-3
-1
-MountingHole
-MountingHole_5mm_Pad_TopOnly
-Mounting Hole 5mm
-mounting hole 5mm
-0
-2
-1
-MountingHole
-MountingHole_5mm_Pad_Via
-Mounting Hole 5mm
-mounting hole 5mm
-0
-9
-1
-MountingHole
-MountingHole_6.4mm_M6
-Mounting Hole 6.4mm, no annular, M6
-mounting hole 6.4mm no annular m6
-0
-0
-0
-MountingHole
-MountingHole_6.4mm_M6_DIN965
-Mounting Hole 6.4mm, no annular, M6, DIN965
-mounting hole 6.4mm no annular m6 din965
-0
-0
-0
-MountingHole
-MountingHole_6.4mm_M6_DIN965_Pad
-Mounting Hole 6.4mm, M6, DIN965
-mounting hole 6.4mm m6 din965
-0
-1
-1
-MountingHole
-MountingHole_6.4mm_M6_DIN965_Pad_TopBottom
-Mounting Hole 6.4mm, M6, DIN965
-mounting hole 6.4mm m6 din965
-0
-3
-1
-MountingHole
-MountingHole_6.4mm_M6_DIN965_Pad_TopOnly
-Mounting Hole 6.4mm, M6, DIN965
-mounting hole 6.4mm m6 din965
-0
-2
-1
-MountingHole
-MountingHole_6.4mm_M6_ISO7380
-Mounting Hole 6.4mm, no annular, M6, ISO7380
-mounting hole 6.4mm no annular m6 iso7380
-0
-0
-0
-MountingHole
-MountingHole_6.4mm_M6_ISO7380_Pad
-Mounting Hole 6.4mm, M6, ISO7380
-mounting hole 6.4mm m6 iso7380
-0
-1
-1
-MountingHole
-MountingHole_6.4mm_M6_ISO7380_Pad_TopBottom
-Mounting Hole 6.4mm, M6, ISO7380
-mounting hole 6.4mm m6 iso7380
-0
-3
-1
-MountingHole
-MountingHole_6.4mm_M6_ISO7380_Pad_TopOnly
-Mounting Hole 6.4mm, M6, ISO7380
-mounting hole 6.4mm m6 iso7380
-0
-2
-1
-MountingHole
-MountingHole_6.4mm_M6_ISO14580
-Mounting Hole 6.4mm, no annular, M6, ISO14580
-mounting hole 6.4mm no annular m6 iso14580
-0
-0
-0
-MountingHole
-MountingHole_6.4mm_M6_ISO14580_Pad
-Mounting Hole 6.4mm, M6, ISO14580
-mounting hole 6.4mm m6 iso14580
-0
-1
-1
-MountingHole
-MountingHole_6.4mm_M6_ISO14580_Pad_TopBottom
-Mounting Hole 6.4mm, M6, ISO14580
-mounting hole 6.4mm m6 iso14580
-0
-3
-1
-MountingHole
-MountingHole_6.4mm_M6_ISO14580_Pad_TopOnly
-Mounting Hole 6.4mm, M6, ISO14580
-mounting hole 6.4mm m6 iso14580
-0
-2
-1
-MountingHole
-MountingHole_6.4mm_M6_Pad
-Mounting Hole 6.4mm, M6
-mounting hole 6.4mm m6
-0
-1
-1
-MountingHole
-MountingHole_6.4mm_M6_Pad_TopBottom
-Mounting Hole 6.4mm, M6
-mounting hole 6.4mm m6
-0
-3
-1
-MountingHole
-MountingHole_6.4mm_M6_Pad_TopOnly
-Mounting Hole 6.4mm, M6
-mounting hole 6.4mm m6
-0
-2
-1
-MountingHole
-MountingHole_6.4mm_M6_Pad_Via
-Mounting Hole 6.4mm, M6
-mounting hole 6.4mm m6
-0
-9
-1
-MountingHole
-MountingHole_6.5mm
-Mounting Hole 6.5mm, no annular
-mounting hole 6.5mm no annular
-0
-0
-0
-MountingHole
-MountingHole_6.5mm_Pad
-Mounting Hole 6.5mm
-mounting hole 6.5mm
-0
-1
-1
-MountingHole
-MountingHole_6.5mm_Pad_TopBottom
-Mounting Hole 6.5mm
-mounting hole 6.5mm
-0
-3
-1
-MountingHole
-MountingHole_6.5mm_Pad_TopOnly
-Mounting Hole 6.5mm
-mounting hole 6.5mm
-0
-2
-1
-MountingHole
-MountingHole_6.5mm_Pad_Via
-Mounting Hole 6.5mm
-mounting hole 6.5mm
-0
-9
-1
-MountingHole
-MountingHole_6mm
-Mounting Hole 6mm, no annular
-mounting hole 6mm no annular
-0
-0
-0
-MountingHole
-MountingHole_6mm_Pad
-Mounting Hole 6mm
-mounting hole 6mm
-0
-1
-1
-MountingHole
-MountingHole_6mm_Pad_TopBottom
-Mounting Hole 6mm
-mounting hole 6mm
-0
-3
-1
-MountingHole
-MountingHole_6mm_Pad_TopOnly
-Mounting Hole 6mm
-mounting hole 6mm
-0
-2
-1
-MountingHole
-MountingHole_6mm_Pad_Via
-Mounting Hole 6mm
-mounting hole 6mm
-0
-9
-1
-MountingHole
-MountingHole_8.4mm_M8
-Mounting Hole 8.4mm, no annular, M8
-mounting hole 8.4mm no annular m8
-0
-0
-0
-MountingHole
-MountingHole_8.4mm_M8_Pad
-Mounting Hole 8.4mm, M8
-mounting hole 8.4mm m8
-0
-1
-1
-MountingHole
-MountingHole_8.4mm_M8_Pad_TopBottom
-Mounting Hole 8.4mm, M8
-mounting hole 8.4mm m8
-0
-3
-1
-MountingHole
-MountingHole_8.4mm_M8_Pad_TopOnly
-Mounting Hole 8.4mm, M8
-mounting hole 8.4mm m8
-0
-2
-1
-MountingHole
-MountingHole_8.4mm_M8_Pad_Via
-Mounting Hole 8.4mm, M8
-mounting hole 8.4mm m8
-0
-9
-1
