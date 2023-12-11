@@ -4,6 +4,7 @@
 *.exe
 *.wav
 Ignore/
+build/
 
 # Temporary files
 *.000
