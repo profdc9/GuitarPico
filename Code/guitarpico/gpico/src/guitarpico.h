@@ -11,7 +11,7 @@
 #define DAC_PWM_B1 13
 #define DAC_PWM_B0 12
 
-#define DAC_PWM_WRAP_VALUE 0xFF
+#define DAC_PWM_WRAP_VALUE 0x3FF
 
 #define ADC_AUDIO_IN 26
 #define ADC_CONTROL_IN 27

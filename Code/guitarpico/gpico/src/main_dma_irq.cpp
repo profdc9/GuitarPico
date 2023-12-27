@@ -9,24 +9,24 @@
 #include "guitarpico.h"
 #include "ssd1306_i2c.h"
 #include "buttons.h"
-#include "dsp.h"
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 
-void initialize_video(void);
 
-#define POLLING_FREQUENCY_HZ 50000u
+#define POLLING_FREQUENCY_HZ 20000u
 #define POLLING_FREQUENCY_US (1000000u/POLLING_FREQUENCY_HZ)
-
-uint dac_pwm_b3_slice_num, dac_pwm_b2_slice_num, dac_pwm_b1_slice_num, dac_pwm_b0_slice_num;
-uint claimed_alarm_num;
-absolute_time_t last_alarm_time;
 
 const u8* Fonts[5] = { FontBold8x8, FontGame8x8, FontIbm8x8, FontItalic8x8, FontThin8x8 };
 
+#define NUMBER_OF_DMA_SAMPLES 16
+uint16_t sample_capture_buf[NUMBER_OF_DMA_SAMPLES];
+
+uint adc_dma_chan;
 volatile uint32_t counter = 0;
 volatile uint16_t p = 0;
+
+uint dac_pwm_b3_slice_num, dac_pwm_b2_slice_num, dac_pwm_b1_slice_num, dac_pwm_b0_slice_num;
+repeating_timer_t sampling_port_func_repeating_timer_t;
 
 void initialize_pwm(void)
 {
@@ -78,21 +78,23 @@ uint16_t control_samples[8];
 volatile uint32_t last1=0,last2=0,last3=0;
 volatile uint32_t dly1,dly2,dly3;
 
-uint16_t sine_ctr = 0;
-uint16_t sine_ctr_frac = 2000;
-
-//extern "C" void __not_in_flash_func(alarm_func(uint alarm_num))
-void alarm_func(uint alarm_num)
+//bool sampling_port_func(repeating_timer *rt)
+extern "C" void __not_in_flash_func(adc_irq(void))
 {
 	uint16_t sample;
 
-	sample = adc_hw->result;
+//	sample = adc_fifo_get_blocking();
+    sample = adc_hw->result;
 	uint32_t cur_time = timer_hw->timelr;
-	absolute_time_t next_alarm_time = make_timeout_time_us(current_input ? 10 : 30);
-	hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
-	last_alarm_time = next_alarm_time;
 	current_input = (current_input+1) & 0x01;
+	adc_run(false);
+	//adc_fifo_setup(false, false, 100, true, false);
+	while (!adc_fifo_is_empty())
+		(void) adc_fifo_get();
+	//adc_fifo_drain();
+	//adc_fifo_setup(true, false, current_input ? 6 : 1, true, false);
 	adc_select_input(current_input);
+	adc_run(true);
 	if (current_input == 0)
 	{
 		dly3 = cur_time-last3;
@@ -110,27 +112,20 @@ void alarm_func(uint alarm_num)
 	last3 = cur_time;
 	dly2 = cur_time-last2;
 
-	int16_t s = (sample << 3) - 16384;
-	s = dsp_process_all_units(s);
-	insert_sample_circ_buf(s);
-	if (s > 16383) p = 255;
-	else if (s < -16384) p = 0;
-	else p = (s+16384) / 32;
-	pwm_set_both_levels(dac_pwm_b3_slice_num, p, p);
-	pwm_set_both_levels(dac_pwm_b1_slice_num, p, p);
-
 	counter++;
-	/*
-	if ((counter & 0x7FFF) == 0x7FFF)
+	if ((counter & 0x3FFF) == 0x3FFF)
 	{
+		p++;
+		if (p > DAC_PWM_WRAP_VALUE)
+			p = 0;
+		pwm_set_both_levels(dac_pwm_b3_slice_num, p, p);
+		pwm_set_both_levels(dac_pwm_b1_slice_num, p, p);
 		gpio_put(25,!gpio_get(25));
-	} */
-	return;
+	}
 }
 
 void initialize_adc(void)
 {
-	
 	adc_init();
 	adc_gpio_init(ADC_AUDIO_IN);
 	adc_gpio_init(ADC_CONTROL_IN);
@@ -139,16 +134,19 @@ void initialize_adc(void)
 	adc_run(false);
 	adc_select_input(0);
 	current_input = 0;
+	adc_fifo_setup(true, false, 4, true, false);
+	adc_irq_set_enabled(false);
+	irq_set_exclusive_handler(ADC_IRQ_FIFO, adc_irq);
+	adc_irq_set_enabled(true);
+	//irq_set_priority(ADC_IRQ_FIFO, 0);
+	irq_set_enabled(ADC_IRQ_FIFO, true);
 	adc_run(true);
 }
 
 void test_all_control(void)
 {
-	char s1[100];
-	char s2[100];
-	sprintf(s1,"counter:%d %u\n",counter,(uint32_t)((((uint64_t)counter)*1000000)/time_us_32()));
-	sprintf(s2,"dly1: %u dly2: %u dly3: %u\n",dly1,dly2,dly3);
-	printf("%s%s",s1,s2);
+	printf("counter:%d %u\n",counter,((uint64_t)counter*1000000)/time_us_32());
+	printf("dly1: %u dly2: %u dly3: %u\n",dly1,dly2,dly3);
 	for (int i=0;i<8;i++)
 		printf("control:%d value:%d\n",i,control_samples[i]);
 }
@@ -166,27 +164,6 @@ void initialize_gpio(void)
 	gpio_init(GPIO_ADC_SEL2);
 	gpio_set_dir(GPIO_ADC_SEL2, GPIO_OUT);
 
-	gpio_init(23);
-	gpio_set_dir(23, GPIO_OUT);
-	gpio_put(23, 1);
-}
-
-void initialize_periodic_alarm(void)
-{
-	for (uint alarm_no=0;alarm_no<4;alarm_no++)
-	{
-		if (!hardware_alarm_is_claimed(alarm_no))
-		{
-			hardware_alarm_claim_unused(alarm_no);
-			claimed_alarm_num = alarm_no;
-			hardware_alarm_set_callback(claimed_alarm_num, alarm_func);
-			last_alarm_time = get_absolute_time();
-			absolute_time_t next_alarm_time = delayed_by_us(last_alarm_time, POLLING_FREQUENCY_US);
-			hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
-			last_alarm_time = next_alarm_time;
-			
-		}
-	}
 }
 
 char buttonpressed(uint8_t b)
@@ -196,48 +173,30 @@ char buttonpressed(uint8_t b)
 
 int main2();
 
-void initialize_sine_counter()
-{
-	dsp_type_sine_synth dtss;
-	dtss.sine_counter_inc = 2000;
-	dsp_initialize(DSP_TYPE_SINE_SYNTH, (void *)&dtss, dsp_unit_entry(0));
-}
-
 int main()
 {
 	char str[40];
 	
 	stdio_init_all();
-	initialize_dsp();
-	//initialize_sine_counter();
 	initialize_gpio();
 	buttons_initialize();
 	initialize_pwm();
 	ssd1306_Initialize();
-	initialize_video();
 	initialize_adc();
-	initialize_periodic_alarm();
 	
+//	main2();
 	for (;;)
 	{
-		uint32_t last_time = time_us_32();
-		while ((time_us_32() - last_time) < 100000)
-			buttons_poll();
-		ssd1306_Clear_Buffer();
-		sprintf(str,"%u %c%c%c%c%c",counter,buttonpressed(0),buttonpressed(1),buttonpressed(2),buttonpressed(3),buttonpressed(4));
-		ssd1306_WriteString(0,0,str);
-		sprintf(str,"dlys: %u %u %u",dly1,dly2,dly3);
-		ssd1306_WriteString(0,8,str);
-		sprintf(str,"c1: %u %u",control_samples[0],control_samples[1]);
-		ssd1306_WriteString(0,16,str);
-		sprintf(str,"c2: %u %u",control_samples[2],control_samples[3]);
-		ssd1306_WriteString(0,24,str);
-		sprintf(str,"buf: %d",sample_circ_buf_value(0));
-		ssd1306_WriteString(0,32,str);
-		sprintf(str,"rate %u",(uint32_t)((((uint64_t)counter)*1000000)/time_us_32()));
-		ssd1306_WriteString(0,40,str);
-		ssd1306_render();
-		test_all_control();
+		buttons_poll();
+		if ((counter & 0xFFF) == 0xFFF)
+		{
+			ssd1306_Clear_Buffer();
+			sprintf(str,"%u %c%c%c%c%c",counter,buttonpressed(0),buttonpressed(1),buttonpressed(2),buttonpressed(3),buttonpressed(4));
+			ssd1306_WriteString(0,0,str);
+			ssd1306_render();
+		}
+		if ((counter & 0x1FFF) == 0x1FFF)
+			test_all_control();
 	}
 	
 }
@@ -360,15 +319,7 @@ void VideoInit()
 	// initialize videomode
 	VgaInitReq(&Vmode);
 
-}
-
-void initialize_video(void)
-{
-	// run VGA core
-	StartVgaCore();
-
-	// initialize videomode
-	VideoInit();
+	initialize_adc();
 }
 
 int main2()
@@ -376,7 +327,11 @@ int main2()
 	Bool slow = True;
 	u32 t, t2;
 
-	initialize_video();
+	// run VGA core
+	StartVgaCore();
+
+	// initialize videomode
+	VideoInit();
 
 	// initialize debug LED
 	gpio_init(LED_PIN);

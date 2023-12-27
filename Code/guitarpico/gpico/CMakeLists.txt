@@ -11,6 +11,7 @@ add_executable(gpico
     src/main.cpp
     src/ssd1306_i2c.c
     src/buttons.c
+    src/dsp.c
 )
 
 add_picovga(gpico)

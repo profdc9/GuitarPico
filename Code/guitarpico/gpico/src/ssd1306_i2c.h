@@ -69,8 +69,6 @@ struct render_area {
 };
 
 
-int maintest();
-
 void ssd1306_Initialize(void);
 void ssd1306_WriteString(int16_t x, int16_t y, char *str);
 void ssd1306_DrawLine(uint8_t *buf, int x0, int y0, int x1, int y1, bool on);
@@ -79,8 +77,7 @@ void ssd1306_Clear_Buffer(void);
 void ssd1306_Set_All_On(void);
 void ssd1306_Set_Entire_On(void);
 void ssd1306_Set_Inv_Disp(void);
-void ssd1036_Set_Norm_Disp(void);
-
+void ssd1306_Set_Norm_Disp(void);
 
 #ifdef __cplusplus
 }

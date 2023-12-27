@@ -215,46 +215,21 @@ static void DrawLine(uint8_t *buf, int x0, int y0, int x1, int y1, bool on) {
 }
 
 static inline int GetFontIndex(uint8_t ch) {
-    if (ch >= 'A' && ch <='Z') {
-        return  ch - 'A' + 1;
-    }
-    else if (ch >= '0' && ch <='9') {
-        return  ch - '0' + 27;
-    }
-    else return  0; // Not got that char so space.
-}
-
-static uint8_t reversed[sizeof(font)] = {0};
-
-static uint8_t reverse(uint8_t b) {
-   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
-   return b;
-}
-
-static void FillReversedCache() {
-    // calculate and cache a reversed version of fhe font, because I defined it upside down...doh!
-    for (int i=0;i<sizeof(font);i++)
-        reversed[i] = reverse(font[i]);
+	return (ch <= '~') ? ch : 0;
 }
 
 static void WriteChar(uint8_t *buf, int16_t x, int16_t y, uint8_t ch) {
-    if (reversed[0] == 0) 
-        FillReversedCache();
-
     if (x > SSD1306_WIDTH - 8 || y > SSD1306_HEIGHT - 8)
         return;
 
     // For the moment, only write on Y row boundaries (every 8 vertical pixels)
-    y = y/8;
+    y = y / 8;
 
-    ch = toupper(ch);
     int idx = GetFontIndex(ch);
     int fb_idx = y * 128 + x;
 
     for (int i=0;i<8;i++) {
-        buf[fb_idx++] = reversed[idx * 8 + i];
+        buf[fb_idx++] = font68[idx * 8 + i];
     }
 }
 
@@ -319,8 +294,7 @@ void ssd1306_Set_Inv_Disp(void)
     SSD1306_send_cmd(SSD1306_SET_INV_DISP);
 }
 
-void ssd1036_Set_Norm_Disp(void)
+void ssd1306_Set_Norm_Disp(void)
 {
    SSD1306_send_cmd(SSD1306_SET_NORM_DISP);
 }
-
