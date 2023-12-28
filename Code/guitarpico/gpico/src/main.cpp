@@ -21,7 +21,6 @@ void initialize_video(void);
 
 uint dac_pwm_b3_slice_num, dac_pwm_b2_slice_num, dac_pwm_b1_slice_num, dac_pwm_b0_slice_num;
 uint claimed_alarm_num;
-absolute_time_t last_alarm_time;
 
 const u8* Fonts[5] = { FontBold8x8, FontGame8x8, FontIbm8x8, FontItalic8x8, FontThin8x8 };
 
@@ -75,6 +74,15 @@ uint current_input = 0;
 uint control_sample_no = 0;
 uint16_t control_samples[8];
 
+const int potvalues[6] = { 2, 1, 0, 3, 4, 6 };
+
+int16_t read_potentiometer_value(uint v)
+{
+	if ((v == 0) || (v >= (sizeof(potvalues)/sizeof(potvalues[0]))))
+		return 0;
+	return (int16_t)(control_samples[potvalues[v-1]] << 2);
+}
+
 volatile uint32_t last1=0,last2=0,last3=0;
 volatile uint32_t dly1,dly2,dly3;
 
@@ -85,12 +93,12 @@ uint16_t sine_ctr_frac = 2000;
 void alarm_func(uint alarm_num)
 {
 	uint16_t sample;
+	uint32_t cur_time;
 
 	sample = adc_hw->result;
-	uint32_t cur_time = timer_hw->timelr;
 	absolute_time_t next_alarm_time = make_timeout_time_us(current_input ? 10 : 30);
 	hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
-	last_alarm_time = next_alarm_time;
+	cur_time = timer_hw->timelr;
 	current_input = (current_input+1) & 0x01;
 	adc_select_input(current_input);
 	if (current_input == 0)
@@ -113,19 +121,13 @@ void alarm_func(uint alarm_num)
 	int16_t s = (sample << 3) - 16384;
 	s = dsp_process_all_units(s);
 	insert_sample_circ_buf(s);
-	if (s > 16383) p = 255;
+	if (s > 16383) p = DAC_PWM_WRAP_VALUE;
 	else if (s < -16384) p = 0;
 	else p = (s+16384) / 32;
 	pwm_set_both_levels(dac_pwm_b3_slice_num, p, p);
 	pwm_set_both_levels(dac_pwm_b1_slice_num, p, p);
 
 	counter++;
-	/*
-	if ((counter & 0x7FFF) == 0x7FFF)
-	{
-		gpio_put(25,!gpio_get(25));
-	} */
-	return;
 }
 
 void initialize_adc(void)
@@ -180,11 +182,9 @@ void initialize_periodic_alarm(void)
 			hardware_alarm_claim_unused(alarm_no);
 			claimed_alarm_num = alarm_no;
 			hardware_alarm_set_callback(claimed_alarm_num, alarm_func);
-			last_alarm_time = get_absolute_time();
-			absolute_time_t next_alarm_time = delayed_by_us(last_alarm_time, POLLING_FREQUENCY_US);
+			absolute_time_t next_alarm_time = make_timeout_time_us(1000);
 			hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
-			last_alarm_time = next_alarm_time;
-			
+			break;
 		}
 	}
 }
@@ -195,6 +195,14 @@ char buttonpressed(uint8_t b)
 }
 
 int main2();
+
+void initialize_delay_effect()
+{
+	dsp_type_delay dtd;
+	dtd.delay_samples = 10000;
+	dtd.echo_reduction = 192;
+	dsp_initialize(DSP_TYPE_DELAY, (void *)&dtd, dsp_unit_entry(0));
+}
 
 void initialize_sine_counter()
 {
@@ -209,7 +217,8 @@ int main()
 	
 	stdio_init_all();
 	initialize_dsp();
-	//initialize_sine_counter();
+//	initialize_sine_counter();
+	initialize_delay_effect();
 	initialize_gpio();
 	buttons_initialize();
 	initialize_pwm();
@@ -218,6 +227,7 @@ int main()
 	initialize_adc();
 	initialize_periodic_alarm();
 	
+	ssd1306_set_cursor(0,0,1);
 	for (;;)
 	{
 		uint32_t last_time = time_us_32();
@@ -225,17 +235,23 @@ int main()
 			buttons_poll();
 		ssd1306_Clear_Buffer();
 		sprintf(str,"%u %c%c%c%c%c",counter,buttonpressed(0),buttonpressed(1),buttonpressed(2),buttonpressed(3),buttonpressed(4));
-		ssd1306_WriteString(0,0,str);
+		ssd1306_set_cursor(0,0,1);
+		ssd1306_printstring(str);
 		sprintf(str,"dlys: %u %u %u",dly1,dly2,dly3);
-		ssd1306_WriteString(0,8,str);
+		ssd1306_set_cursor(0,1,1);
+		ssd1306_printstring(str);
 		sprintf(str,"c1: %u %u",control_samples[0],control_samples[1]);
-		ssd1306_WriteString(0,16,str);
+		ssd1306_set_cursor(0,2,1);
+		ssd1306_printstring(str);
 		sprintf(str,"c2: %u %u",control_samples[2],control_samples[3]);
-		ssd1306_WriteString(0,24,str);
+		ssd1306_set_cursor(0,3,1);
+		ssd1306_printstring(str);
 		sprintf(str,"buf: %d",sample_circ_buf_value(0));
-		ssd1306_WriteString(0,32,str);
+		ssd1306_set_cursor(0,4,1);
+		ssd1306_printstring(str);
 		sprintf(str,"rate %u",(uint32_t)((((uint64_t)counter)*1000000)/time_us_32()));
-		ssd1306_WriteString(0,40,str);
+		ssd1306_set_cursor(0,5,1);
+		ssd1306_printstring(str);
 		ssd1306_render();
 		test_all_control();
 	}

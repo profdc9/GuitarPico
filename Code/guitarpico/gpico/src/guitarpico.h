@@ -5,6 +5,7 @@
 #include "hardware/pwm.h"
 #include "hardware/adc.h"
 #include "hardware/dma.h"
+#include "hardware/timer.h"
 
 #define DAC_PWM_B3 15
 #define DAC_PWM_B2 14
@@ -25,6 +26,8 @@
 #define GPIO_BUTTON4 22
 #define GPIO_BUTTON5 28
 
+#define GUITARPICO_SAMPLERATE 23808u
+
 #ifndef LED_PIN
 #define LED_PIN 25
 #endif /* LED_PIN */
@@ -33,6 +36,10 @@
 extern "C"
 {
 #endif
+
+int16_t read_potentiometer_value(uint v);
+
+#define POTENTIOMETER_VALUE_SENSITIVITY 5
 
 #ifdef __cplusplus
 }

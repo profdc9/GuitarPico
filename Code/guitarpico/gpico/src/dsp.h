@@ -28,7 +28,7 @@ inline int16_t sine_table_entry(int n)
 	return sine_table[n & (SINE_TABLE_ENTRIES-1)];
 };
 
-#define SAMPLE_CIRC_BUF_SIZE (1u<<8)
+#define SAMPLE_CIRC_BUF_SIZE (1u<<15)
 #define SAMPLE_CIRC_BUF_MASK (SAMPLE_CIRC_BUF_SIZE-1)
 
 extern int16_t sample_circ_buf[];
@@ -53,6 +53,7 @@ typedef enum
 {
 	DSP_TYPE_NONE = 0,
 	DSP_TYPE_SINE_SYNTH,
+	DSP_TYPE_DELAY
 } dsp_unit_type;
 
 typedef struct
@@ -65,14 +66,30 @@ typedef struct
 {
 	dsp_unit_type  dut;
 	bool is_changed;
-	uint16_t sine_counter;
-	uint16_t sine_counter_inc;
+	uint32_t sine_counter;
+	uint32_t sine_counter_inc;
+	uint32_t control_number;
+	uint32_t pot_value;
+	uint32_t frequency;
 } dsp_type_sine_synth;
+
+typedef struct
+{
+	dsp_unit_type  dut;
+	bool is_changed;
+	uint32_t delay_samples;
+	uint32_t echo_reduction;
+	uint32_t control_number1;
+	uint32_t pot_value1;
+	uint32_t control_number2;
+	uint32_t pot_value2;
+} dsp_type_delay;
 
 typedef union 
 {
 	dsp_type_none         dtn;
 	dsp_type_sine_synth   dtss;
+	dsp_type_delay        dtd;
 } dsp_unit;
 
 typedef bool    (dsp_type_initialize)(void *initialization_data, dsp_unit *du);

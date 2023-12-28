@@ -36,6 +36,10 @@
 #include "ssd1306_i2c.h"
 #include "ssd1306_font.h"
 
+static uint8_t ssd1306_modified = 0;
+static uint8_t ssd1306_cursor_x = 0;
+static uint8_t ssd1306_cursor_y = 0;
+static uint8_t ssd1306_cursor_on = 0;
 uint8_t ssd1306_buf[SSD1306_BUF_LEN];
 
 struct render_area ssd1306_frame_area = {
@@ -218,29 +222,58 @@ static inline int GetFontIndex(uint8_t ch) {
 	return (ch <= '~') ? ch : 0;
 }
 
+static void InvertBlock(uint8_t *buf, int16_t x, int16_t y)
+{
+    if (x > (SSD1306_WIDTH/8 - 1) || y > (SSD1306_HEIGHT/8 - 1))
+        return;
+    int fb_idx = y * 128 + x * 8;
+    for (int i=0;i<8;i++) {
+        buf[fb_idx++] ^= 0xFF;
+	}
+}
+
+static void InvertCursor(void)
+{
+	if (ssd1306_cursor_on) InvertBlock(ssd1306_buf, ssd1306_cursor_x, ssd1306_cursor_y);
+}
+
 static void WriteChar(uint8_t *buf, int16_t x, int16_t y, uint8_t ch) {
-    if (x > SSD1306_WIDTH - 8 || y > SSD1306_HEIGHT - 8)
+    if (x > (SSD1306_WIDTH/8 - 1) || y > (SSD1306_HEIGHT/8 - 1))
         return;
 
-    // For the moment, only write on Y row boundaries (every 8 vertical pixels)
-    y = y / 8;
-
     int idx = GetFontIndex(ch);
-    int fb_idx = y * 128 + x;
+    int fb_idx = y * 128 + x * 8;
 
     for (int i=0;i<8;i++) {
         buf[fb_idx++] = font68[idx * 8 + i];
     }
 }
 
+static void WriteCharAtCursor(uint8_t *buf, uint8_t ch)
+{
+    WriteChar(buf, ssd1306_cursor_x, ssd1306_cursor_y, ch);
+    if (ssd1306_cursor_x >= (SSD1306_WIDTH/8 - 1)) 
+    {
+       ssd1306_cursor_x = 0;
+       if (ssd1306_cursor_y < (SSD1306_HEIGHT/8 - 1))
+           ssd1306_cursor_y++;
+    } else ssd1306_cursor_x++;
+}
+
+static void WriteStringAtCursor(uint8_t *buf, char *str)
+{
+    while (*str)
+       WriteCharAtCursor(buf, *str++);
+}
+
 static void WriteString(uint8_t *buf, int16_t x, int16_t y, char *str) {
     // Cull out any string off the screen
-    if (x > SSD1306_WIDTH - 8 || y > SSD1306_HEIGHT - 8)
+    if (x > (SSD1306_WIDTH/8 - 1) || y > (SSD1306_HEIGHT/8 - 1))
         return;
 
     while (*str) {
         WriteChar(buf, x, y, *str++);
-        x+=8;
+        if (x < (SSD1306_WIDTH/8 - 1)) x++;
     }
 }
 
@@ -251,11 +284,34 @@ void ssd1306_WriteString(int16_t x, int16_t y, char *str)
 
 void ssd1306_DrawLine(uint8_t *buf, int x0, int y0, int x1, int y1, bool on)
 {
-   DrawLine(ssd1306_buf, x0, y0, x1, y1, on);
+    DrawLine(ssd1306_buf, x0, y0, x1, y1, on);
+}
+
+void ssd1306_set_cursor(uint8_t x, uint8_t y, uint8_t on)
+{
+    ssd1306_cursor_x = x;
+    ssd1306_cursor_y = y;
+    ssd1306_cursor_on = on;
+}
+
+void ssd1306_set_cursor_onoff(uint8_t on)
+{
+    ssd1306_cursor_on = on;
+}
+
+void ssd1306_printchar(uint8_t ch)
+{
+    WriteCharAtCursor(ssd1306_buf, ch);
+}
+
+void ssd1306_printstring(char *str)
+{
+    WriteStringAtCursor(ssd1306_buf, str);
 }
 
 void ssd1306_render(void)
 {
+    InvertCursor();
     render(ssd1306_buf, &ssd1306_frame_area);
 }
 
@@ -298,3 +354,4 @@ void ssd1306_Set_Norm_Disp(void)
 {
    SSD1306_send_cmd(SSD1306_SET_NORM_DISP);
 }
+

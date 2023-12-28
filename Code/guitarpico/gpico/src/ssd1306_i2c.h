@@ -79,6 +79,12 @@ void ssd1306_Set_Entire_On(void);
 void ssd1306_Set_Inv_Disp(void);
 void ssd1306_Set_Norm_Disp(void);
 
+void ssd1306_set_cursor(uint8_t x, uint8_t y, uint8_t on);
+void ssd1306_set_cursor_onoff(uint8_t on);
+void ssd1306_printchar(uint8_t ch);
+void ssd1306_printstring(char *str);
+void ssd1306_update(void);
+
 #ifdef __cplusplus
 }
 #endif
