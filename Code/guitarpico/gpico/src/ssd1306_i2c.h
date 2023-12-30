@@ -1,3 +1,6 @@
+
+/* Modified by Daniel L. Marks, all changes also under BSD-3-Clause */
+
 #ifndef __SSD1306_I2C_H
 #define __SSD1306_I2C_H
 
@@ -70,7 +73,7 @@ struct render_area {
 
 
 void ssd1306_Initialize(void);
-void ssd1306_WriteString(int16_t x, int16_t y, char *str);
+void ssd1306_WriteString(int16_t x, int16_t y, const char *str);
 void ssd1306_DrawLine(uint8_t *buf, int x0, int y0, int x1, int y1, bool on);
 void ssd1306_render(void);
 void ssd1306_Clear_Buffer(void);
@@ -79,10 +82,10 @@ void ssd1306_Set_Entire_On(void);
 void ssd1306_Set_Inv_Disp(void);
 void ssd1306_Set_Norm_Disp(void);
 
-void ssd1306_set_cursor(uint8_t x, uint8_t y, uint8_t on);
+void ssd1306_set_cursor(uint8_t x, uint8_t y);
 void ssd1306_set_cursor_onoff(uint8_t on);
 void ssd1306_printchar(uint8_t ch);
-void ssd1306_printstring(char *str);
+void ssd1306_printstring(const char *str);
 void ssd1306_update(void);
 
 #ifdef __cplusplus

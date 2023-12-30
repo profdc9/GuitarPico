@@ -33,7 +33,8 @@
 #include "ui.h"
 #include "ssd1306_i2c.h"
 
-#define setcursor(x,y,c) ssd1306_set_cursor(x,y,c)
+#define cleardisplay() ssd1306_Clear_Buffer();
+#define setcursor(x,y) ssd1306_set_cursor(x,y)
 #define cursoronoff(c) ssd1306_set_cursor_onoff(c)
 #define writechar(c) ssd1306_printchar(c)
 #define writestr(s) ssd1306_printstring(s)
@@ -44,11 +45,26 @@
 #define clearbuttons() buttons_clear()
 #define getmillis() (time_us_32() / 1000)
 
+void set_cursor(uint8_t x, uint8_t y)
+{
+    return setcursor(x,y);
+}
+
+void set_cursor_onoff(uint8_t c)
+{
+    return cursoronoff(c);
+}
+
+void button_clear(void)
+{
+    clearbuttons();
+}
+
 void bar_graph(bargraph_dat *bgd)
 {
     uint8_t ct = bgd->width_bars;
     int8_t width = bgd->bars;
-    setcursor(bgd->col_bars,bgd->row_bars,1);
+    setcursor(bgd->col_bars,bgd->row_bars);
     while ((width > 0) && (ct > 0))
     {
       writechar(width+128);
@@ -63,6 +79,16 @@ void bar_graph(bargraph_dat *bgd)
 	displayrefresh();
 }
 
+void clear_display(void)
+{
+    cleardisplay();
+}
+
+void display_refresh(void)
+{
+    displayrefresh();
+}
+
 void write_num(uint32_t n, uint8_t digits, uint8_t decs)
 {
   char s[20];
@@ -70,9 +96,15 @@ void write_num(uint32_t n, uint8_t digits, uint8_t decs)
   writestr(p);
 }
 
+void write_str(uint8_t col, uint8_t row, const char *str)
+{
+    setcursor(col,row);
+    writestr(str);
+}
+
 void write_str_with_spaces(uint8_t col, uint8_t row, const char *str, uint8_t len)
 {
-  setcursor(col,row,1);
+  setcursor(col,row);
   while (len > 0)
   {
     char c = *str++;
@@ -95,12 +127,12 @@ void do_show_menu_item(menu_str *menu)
 
 uint8_t button_enter(void)
 {
-  return getbuttonpressed(0);
+  return getbuttonpressed(2);
 }
 
 uint8_t button_left(void)
 {
-  return getbuttonpressed(2);
+  return getbuttonpressed(4);
 }
 
 uint8_t button_right(void)
@@ -110,12 +142,12 @@ uint8_t button_right(void)
 
 uint8_t button_up(void)
 {
-  return getbuttonpressed(1);
+  return getbuttonpressed(0);
 }
 
 uint8_t button_down(void)
 {
-  return getbuttonpressed(4);
+  return getbuttonpressed(1);
 }
 
 void select_item(menu_str *menu, uint8_t item)
@@ -192,7 +224,7 @@ uint8_t abort_button(void)
 
 void display_clear_row(uint8_t col, uint8_t row, uint8_t len)
 {
-  setcursor(col, row, 1);
+  setcursor(col, row);
   while (len > 0)
   {
     writechar(' ');
@@ -202,7 +234,7 @@ void display_clear_row(uint8_t col, uint8_t row, uint8_t len)
 
 void scroll_number_redraw(scroll_number_dat *snd)
 {
-  setcursor(snd->col, snd->row, 1);
+  setcursor(snd->col, snd->row);
   write_num(snd->n, snd->digits, snd->decs);
   displayrefresh();
 
@@ -212,7 +244,7 @@ void scroll_number_key(scroll_number_dat *snd)
 {
   uint8_t redraw = 1;
 
-  setcursor(snd->col + snd->position + ((snd->decs != 0) && ((snd->position + snd->decs) >= snd->digits)), snd->row, 1);
+  setcursor(snd->col + snd->position + ((snd->decs != 0) && ((snd->position + snd->decs) >= snd->digits)), snd->row);
   displayrefresh();
   idle_task();
   if (button_enter())
@@ -246,7 +278,7 @@ void scroll_number_key(scroll_number_dat *snd)
       snd->entered = 1;
       return;
     }
-    uint32_t p10 = (snd->digits - snd->position - 1);
+    uint32_t p10 = pow10in(snd->digits - snd->position - 1);
     if (snd->n >= (snd->minimum_number + p10))
     {
       snd->n -= p10;
@@ -282,10 +314,10 @@ void scroll_alpha_redraw(scroll_alpha_dat *sad)
   else
     startpos = sad->position - dp;
   sad->cursorpos = sad->position - startpos;
-  setcursor(sad->col, sad->row, 1);
+  setcursor(sad->col, sad->row);
   for (dp = 0; dp < sad->displen; dp++)
     writechar(sad->buffer[dp + startpos]);
-  setcursor(sad->col + sad->cursorpos, sad->row, 1);
+  setcursor(sad->col + sad->cursorpos, sad->row);
   displayrefresh();
 }
 
@@ -312,7 +344,7 @@ void scroll_alpha_key(scroll_alpha_dat *sad)
 {
   uint8_t redraw = 1;
 
-  setcursor(sad->col + sad->cursorpos, sad->row, 1);
+  setcursor(sad->col + sad->cursorpos, sad->row);
   idle_task();
   if (button_enter())
   { 
@@ -433,7 +465,7 @@ void scroll_readout_display(scroll_readout_dat *srd)
 {
   if (!srd->notchanged)
   {
-    setcursor(srd->col, srd->row, 1);
+    setcursor(srd->col, srd->row);
     for (uint8_t dp = 0; dp < srd->displen; dp++)
       writechar(srd->buffer[dp + srd->position]);
     srd->notchanged = 1;
@@ -442,7 +474,7 @@ void scroll_readout_display(scroll_readout_dat *srd)
 
 void scroll_readout_key(scroll_readout_dat *srd)
 {
-  setcursor(srd->col, srd->row, 1);
+  setcursor(srd->col, srd->row);
   displayrefresh();
   idle_task();
   if (button_left())

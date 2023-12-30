@@ -39,14 +39,6 @@ typedef struct _menu_str
   uint8_t itemesc;
 } menu_str;
 
-
-uint8_t do_menu(menu_str *menu);
-void do_show_menu_item(menu_str *menu);
-bool show_lr(uint8_t row, const char *message, const char *message2);
-char *number_str(char *s, uint32_t n, uint8_t digits, uint8_t decs);
-void write_str_with_spaces(uint8_t col, uint8_t row, const char *str, uint8_t len);
-void write_num(uint32_t n, uint8_t digits, uint8_t decs);
-
 typedef struct _bargraph_dat
 {
   uint8_t width_bars;
@@ -86,6 +78,18 @@ typedef struct _scroll_alpha_dat
   uint8_t        exited;
 } scroll_alpha_dat;
 
+void bar_graph(bargraph_dat *bgd);
+uint8_t do_menu(menu_str *menu);
+void do_show_menu_item(menu_str *menu);
+bool show_lr(uint8_t row, const char *message, const char *message2);
+void set_cursor(uint8_t x, uint8_t y);
+void set_cursor_onoff(uint8_t c);
+char *number_str(char *s, uint32_t n, uint8_t digits, uint8_t decs);
+void write_str(uint8_t col, uint8_t row, const char *str);
+void write_str_with_spaces(uint8_t col, uint8_t row, const char *str, uint8_t len);
+void write_num(uint32_t n, uint8_t digits, uint8_t decs);
+void clear_display(void);
+
 void scroll_number_stop(scroll_number_dat *snd);
 void scroll_number_start(scroll_number_dat *snd);
 void scroll_number_key(scroll_number_dat *snd);
@@ -109,11 +113,13 @@ typedef struct _scroll_readout_dat
   uint8_t        notchanged;
 } scroll_readout_dat;
 
-void lcdBarGraph(bargraph_dat *bgd);
-uint8_t abort_button_left(void);
-uint8_t abort_button_right(void);
-uint8_t abort_button_enter(void);
-uint8_t abort_button(void);
+uint8_t button_enter(void);
+uint8_t button_left(void);
+uint8_t button_right(void);
+uint8_t button_up(void);
+uint8_t button_down(void);
+void button_clear(void);
+void display_refresh(void);
 
 void scroll_readout_initialize(scroll_readout_dat *srd);
 void scroll_readout_add_character(scroll_readout_dat *srd, uint8_t ch);

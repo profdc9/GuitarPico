@@ -12,8 +12,8 @@ static uint8_t _state_count[NUM_BUTTONS];
 static uint8_t _last_state[NUM_BUTTONS];
 static uint8_t _repeated_state[NUM_BUTTONS];
 
-uint8_t repeat_states_init_ctr = 100;
-uint8_t repeat_states_next_ctr = 30;
+const uint8_t repeat_states_init_ctr = 40;
+const uint8_t repeat_states_next_ctr = 20;
 
 void buttons_initialize(void)
 {
@@ -41,7 +41,7 @@ void buttons_poll()
    
   for (uint8_t i=0; i<NUM_BUTTONS; i++)
   {
-     uint8_t state = gpio_get(buttons_pad[i]);
+     uint8_t state = gpio_get(buttons_pad[i]) != 0;
      if (state == _last_state[i])
      {
         _state_count[i] = 0;
@@ -86,7 +86,7 @@ bool button_waitpressed(uint8_t b)
 
 uint8_t button_readunbounced(uint8_t b)
 {
-  return (!gpio_get(buttons_pad[b]));
+  return (gpio_get(buttons_pad[b]) == 0);
 }
 
 uint8_t button_readbutton(uint8_t b)

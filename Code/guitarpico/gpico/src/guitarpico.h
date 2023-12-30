@@ -12,10 +12,13 @@
 #define DAC_PWM_B1 13
 #define DAC_PWM_B0 12
 
-#define DAC_PWM_WRAP_VALUE 0x3FF
+#define DAC_PWM_WRAP_VALUE 0x400
 
 #define ADC_AUDIO_IN 26
 #define ADC_CONTROL_IN 27
+#define ADC_MAX_VALUE 4096
+#define ADC_PREC_VALUE 4096
+
 #define GPIO_ADC_SEL0 16
 #define GPIO_ADC_SEL1 17
 #define GPIO_ADC_SEL2 18

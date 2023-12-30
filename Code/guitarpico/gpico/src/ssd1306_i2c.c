@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+/* Modified by Daniel L. Marks, all changes also under BSD-3-Clause */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -40,6 +42,7 @@ static uint8_t ssd1306_modified = 0;
 static uint8_t ssd1306_cursor_x = 0;
 static uint8_t ssd1306_cursor_y = 0;
 static uint8_t ssd1306_cursor_on = 0;
+static uint8_t ssd1306_cursor_painted = 0;
 uint8_t ssd1306_buf[SSD1306_BUF_LEN];
 
 struct render_area ssd1306_frame_area = {
@@ -219,7 +222,7 @@ static void DrawLine(uint8_t *buf, int x0, int y0, int x1, int y1, bool on) {
 }
 
 static inline int GetFontIndex(uint8_t ch) {
-	return (ch <= '~') ? ch : 0;
+    return (ch <= '~') ? ch : 0;
 }
 
 static void InvertBlock(uint8_t *buf, int16_t x, int16_t y)
@@ -229,28 +232,42 @@ static void InvertBlock(uint8_t *buf, int16_t x, int16_t y)
     int fb_idx = y * 128 + x * 8;
     for (int i=0;i<8;i++) {
         buf[fb_idx++] ^= 0xFF;
-	}
+    }
 }
 
 static void InvertCursor(void)
 {
-	if (ssd1306_cursor_on) InvertBlock(ssd1306_buf, ssd1306_cursor_x, ssd1306_cursor_y);
+    if (ssd1306_cursor_on) 
+    {
+        InvertBlock(ssd1306_buf, ssd1306_cursor_x, ssd1306_cursor_y);
+        ssd1306_cursor_painted = 1;
+    }
+}
+
+static void ssd1306_remove_cursor(void)
+{
+    if (ssd1306_cursor_painted)
+    {
+        InvertCursor();
+        ssd1306_cursor_painted = 0;
+    }
 }
 
 static void WriteChar(uint8_t *buf, int16_t x, int16_t y, uint8_t ch) {
     if (x > (SSD1306_WIDTH/8 - 1) || y > (SSD1306_HEIGHT/8 - 1))
         return;
 
-    int idx = GetFontIndex(ch);
+    int idx = GetFontIndex(ch) * 8;
     int fb_idx = y * 128 + x * 8;
 
     for (int i=0;i<8;i++) {
-        buf[fb_idx++] = font68[idx * 8 + i];
+        buf[fb_idx++] = font68[idx + i];
     }
 }
 
 static void WriteCharAtCursor(uint8_t *buf, uint8_t ch)
 {
+    ssd1306_remove_cursor();
     WriteChar(buf, ssd1306_cursor_x, ssd1306_cursor_y, ch);
     if (ssd1306_cursor_x >= (SSD1306_WIDTH/8 - 1)) 
     {
@@ -260,13 +277,13 @@ static void WriteCharAtCursor(uint8_t *buf, uint8_t ch)
     } else ssd1306_cursor_x++;
 }
 
-static void WriteStringAtCursor(uint8_t *buf, char *str)
+static void WriteStringAtCursor(uint8_t *buf, const char *str)
 {
     while (*str)
        WriteCharAtCursor(buf, *str++);
 }
 
-static void WriteString(uint8_t *buf, int16_t x, int16_t y, char *str) {
+static void WriteString(uint8_t *buf, int16_t x, int16_t y, const char *str) {
     // Cull out any string off the screen
     if (x > (SSD1306_WIDTH/8 - 1) || y > (SSD1306_HEIGHT/8 - 1))
         return;
@@ -277,47 +294,70 @@ static void WriteString(uint8_t *buf, int16_t x, int16_t y, char *str) {
     }
 }
 
-void ssd1306_WriteString(int16_t x, int16_t y, char *str)
+void ssd1306_WriteString(int16_t x, int16_t y, const char *str)
 {
+    ssd1306_remove_cursor();
     WriteString(ssd1306_buf, x, y, str);
+    ssd1306_modified = 1;
 }
 
 void ssd1306_DrawLine(uint8_t *buf, int x0, int y0, int x1, int y1, bool on)
 {
+    ssd1306_remove_cursor();
     DrawLine(ssd1306_buf, x0, y0, x1, y1, on);
 }
 
-void ssd1306_set_cursor(uint8_t x, uint8_t y, uint8_t on)
+void ssd1306_set_cursor(uint8_t x, uint8_t y)
 {
-    ssd1306_cursor_x = x;
-    ssd1306_cursor_y = y;
-    ssd1306_cursor_on = on;
+    ssd1306_remove_cursor();
+    if ((ssd1306_cursor_x != x) || (ssd1306_cursor_y != y))
+    {
+        ssd1306_cursor_x = x;
+        ssd1306_cursor_y = y;
+        ssd1306_modified = 1;
+    }
 }
 
 void ssd1306_set_cursor_onoff(uint8_t on)
 {
-    ssd1306_cursor_on = on;
+    ssd1306_remove_cursor();
+    if (ssd1306_cursor_on != on)
+    {
+        ssd1306_cursor_on = on;
+        ssd1306_modified = 1;
+    }
 }
 
 void ssd1306_printchar(uint8_t ch)
 {
     WriteCharAtCursor(ssd1306_buf, ch);
+    ssd1306_modified = 1;
 }
 
-void ssd1306_printstring(char *str)
+void ssd1306_printstring(const char *str)
 {
     WriteStringAtCursor(ssd1306_buf, str);
+    ssd1306_modified = 1;
 }
 
 void ssd1306_render(void)
 {
     InvertCursor();
     render(ssd1306_buf, &ssd1306_frame_area);
+    ssd1306_modified = 0;
 }
+
+void ssd1306_update(void)
+{
+    if (ssd1306_modified) ssd1306_render();
+}
+
 
 void ssd1306_Clear_Buffer(void)
 {
     memset(ssd1306_buf, 0, SSD1306_BUF_LEN);
+    ssd1306_modified = 1;
+    ssd1306_cursor_painted = 0;
 }
 
 void ssd1306_Initialize(void)
@@ -343,7 +383,6 @@ void ssd1306_Set_Entire_On(void)
 {
     SSD1306_send_cmd(SSD1306_SET_ENTIRE_ON);
 }
-
 
 void ssd1306_Set_Inv_Disp(void)
 {

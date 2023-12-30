@@ -21,7 +21,8 @@
 // screen resolution
 #if FORMAT==CANVAS_8
 #define WIDTH	320	// screen width
-#define HEIGHT	400	// screen height
+#define HEIGHT	200	// screen height
+#define DOUBLEY
 #define DRV	VideoEGA // driver
 #else
 #define WIDTH	640	// screen width
