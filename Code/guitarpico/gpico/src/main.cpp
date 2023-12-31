@@ -77,11 +77,11 @@ uint16_t control_samples[8];
 
 const int potvalues[6] = { 2, 1, 0, 3, 4, 6 };
 
-int16_t read_potentiometer_value(uint v)
+uint16_t read_potentiometer_value(uint v)
 {
-    if ((v == 0) || (v >= (sizeof(potvalues)/sizeof(potvalues[0]))))
+    if ((v == 0) || (v > (sizeof(potvalues)/sizeof(potvalues[0]))))
         return 0;
-    return (int16_t)(control_samples[potvalues[v-1]] << 2);
+    return (uint16_t)(control_samples[potvalues[v-1]]*(POT_MAX_VALUE/ADC_MAX_VALUE));
 }
 
 volatile uint32_t last1=0,last2=0,last3=0;
@@ -196,28 +196,13 @@ char buttonpressed(uint8_t b)
     return button_readbutton(b) ? '1' : '0';
 }
 
-int main2();
-
-void initialize_delay_effect()
-{
-    dsp_unit_initialize(dsp_unit_entry(0), DSP_TYPE_DELAY);;
-    dsp_unit_entry(0)->dtd.delay_samples = 10000;
-    dsp_unit_entry(0)->dtd.echo_reduction = 192;
-}
-
-void initialize_sine_counter()
-{
-    dsp_unit_initialize(dsp_unit_entry(0), DSP_TYPE_SINE_SYNTH );
-    dsp_unit_entry(0)->dtss.sine_counter_inc = 2000;
-}
-
 uint32_t read_value_prec(void *v, int prec)
 {
     if (prec == 1)
         return *((uint8_t *)v);
     if (prec == 2)
         return *((uint16_t *)v);
-    return (*(uint32_t *)v);
+    return *((uint32_t *)v);
 }
 
 void set_value_prec(void *v, int prec, uint32_t val)
@@ -232,7 +217,7 @@ void set_value_prec(void *v, int prec, uint32_t val)
         *((uint16_t *)v) = val;
         return;
     }
-    (*(uint32_t *)v) = val;
+    *((uint32_t *)v) = val;
 }
 
 void adjust_parms(uint8_t unit_no)
@@ -366,6 +351,25 @@ void adjust_dsp_params(void)
     }
 }
 
+int main2();
+
+void initialize_delay_effect()
+{
+    dsp_unit_initialize(dsp_unit_entry(0), DSP_TYPE_DELAY);;
+    dsp_unit_entry(0)->dtd.delay_samples = 10000;
+    dsp_unit_entry(0)->dtd.echo_reduction = 192;
+}
+
+void initialize_sine_counter()
+{
+    dsp_unit_initialize(dsp_unit_entry(0), DSP_TYPE_SINE_SYNTH );
+}
+
+void initialize_bandpass_filter()
+{
+    dsp_unit_initialize(dsp_unit_entry(0), DSP_TYPE_BANDPASS );
+}
+
 int main()
 {
     char str[40];
@@ -373,7 +377,8 @@ int main()
     stdio_init_all();
     initialize_dsp();
 //  initialize_sine_counter();
-    initialize_delay_effect();
+//    initialize_delay_effect();
+    initialize_bandpass_filter();
     initialize_gpio();
     buttons_initialize();
     initialize_pwm();

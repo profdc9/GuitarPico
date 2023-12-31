@@ -11,23 +11,9 @@ extern "C"
 #define MATH_PI_F 3.1415926535f
 #define SINE_TABLE_ENTRIES (1 << 8)
 
-#define QUANTIZATION_BITS 14
-#define QUANTIZATION_MAX (1<<QUANTIZATION_BITS)
-#define QUANTIZATION_MAX_FLOAT ((float)(1<<QUANTIZATION_BITS))
-
-inline int16_t float_to_sampled_int(float x)
-{
-    return (int16_t)(QUANTIZATION_MAX_FLOAT*x+0.5f);
-}
-
-inline int16_t fractional_int_remove_offset(int32_t x)
-{
-    return (int16_t)(x/QUANTIZATION_MAX_FLOAT);
-}
-
-extern int16_t sine_table[];
+extern int32_t sine_table[];
 void initialize_sine_table(void);
-inline int16_t sine_table_entry(int n)
+inline int32_t sine_table_entry(int n)
 {
     return sine_table[n & (SINE_TABLE_ENTRIES-1)];
 };
@@ -70,7 +56,8 @@ typedef enum
 {
     DSP_TYPE_NONE = 0,
     DSP_TYPE_SINE_SYNTH,
-    DSP_TYPE_DELAY
+    DSP_TYPE_DELAY,
+    DSP_TYPE_BANDPASS
 } dsp_unit_type;
 
 typedef struct
@@ -103,11 +90,87 @@ typedef struct
     uint32_t pot_value2;
 } dsp_type_delay;
 
+typedef struct
+{
+    dsp_unit_type  dut;
+    bool is_changed;
+    uint16_t frequency;
+    uint16_t Q;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+    uint16_t last_frequency;
+    uint16_t last_Q;
+    int32_t filtb0;
+    int32_t filtb1;
+    int32_t filtb2;
+    int32_t filta1;
+    int32_t filta2;
+    int32_t sampledly1, sampledly2, filtdly1, filtdly2;
+} dsp_type_bandpass;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    bool is_changed;
+    uint16_t frequency;
+    uint16_t Q;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+    uint16_t last_frequency;
+    uint16_t last_Q;
+    int32_t filtb0;
+    int32_t filtb1;
+    int32_t filtb2;
+    int32_t filta1;
+    int32_t filta2;
+    int32_t sampledly1, sampledly2, filtdly1, filtdly2;
+} dsp_type_lowpass;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    bool is_changed;
+    uint16_t frequency;
+    uint16_t Q;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+    uint16_t last_frequency;
+    uint16_t last_Q;
+    int32_t filtb0;
+    int32_t filtb1;
+    int32_t filtb2;
+    int32_t filta1;
+    int32_t filta2;
+    int32_t sampledly1, sampledly2, filtdly1, filtdly2;
+} dsp_type_highpass;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    bool is_changed;
+    uint16_t frequency;
+    uint16_t Q;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+    uint16_t last_frequency;
+    uint16_t last_Q;
+    int32_t filtb0;
+    int32_t filtb1;
+    int32_t filtb2;
+    int32_t filta1;
+    int32_t filta2;
+    int32_t sampledly1, sampledly2, filtdly1, filtdly2;
+} dsp_type_phaser;
+
 typedef union 
 {
     dsp_type_none         dtn;
     dsp_type_sine_synth   dtss;
     dsp_type_delay        dtd;
+    dsp_type_bandpass     dtbp;
+    dsp_type_lowpass      dtlp;
+    dsp_type_highpass     dthp;
+    dsp_type_highpass     dtphs;
 } dsp_unit;
 
 typedef bool    (dsp_type_initialize)(void *initialization_data, dsp_unit *du);

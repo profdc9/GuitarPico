@@ -17,7 +17,7 @@
 #define ADC_AUDIO_IN 26
 #define ADC_CONTROL_IN 27
 #define ADC_MAX_VALUE 4096
-#define ADC_PREC_VALUE 4096
+#define ADC_PREC_VALUE 16384
 
 #define GPIO_ADC_SEL0 16
 #define GPIO_ADC_SEL1 17
@@ -30,6 +30,7 @@
 #define GPIO_BUTTON5 28
 
 #define GUITARPICO_SAMPLERATE 23808u
+#define POT_MAX_VALUE 16384u
 
 #ifndef LED_PIN
 #define LED_PIN 25
@@ -40,7 +41,7 @@ extern "C"
 {
 #endif
 
-int16_t read_potentiometer_value(uint v);
+uint16_t read_potentiometer_value(uint v);
 
 #define POTENTIOMETER_VALUE_SENSITIVITY 5
 
