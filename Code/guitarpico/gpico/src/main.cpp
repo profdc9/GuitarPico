@@ -26,7 +26,6 @@ uint claimed_alarm_num;
 const u8* Fonts[5] = { FontBold8x8, FontGame8x8, FontIbm8x8, FontItalic8x8, FontThin8x8 };
 
 volatile uint32_t counter = 0;
-volatile uint16_t p = 0;
 
 void initialize_pwm(void)
 {
@@ -87,11 +86,9 @@ uint16_t read_potentiometer_value(uint v)
 volatile uint32_t last1=0,last2=0,last3=0;
 volatile uint32_t dly1,dly2,dly3;
 
-uint16_t sine_ctr = 0;
-uint16_t sine_ctr_frac = 2000;
+volatile uint16_t next_sample = 0;
 
-//extern "C" void __not_in_flash_func(alarm_func(uint alarm_num))
-void alarm_func(uint alarm_num)
+static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
 {
     uint16_t sample;
     uint32_t cur_time;
@@ -104,6 +101,8 @@ void alarm_func(uint alarm_num)
     adc_select_input(current_input);
     if (current_input == 0)
     {
+        pwm_set_both_levels(dac_pwm_b3_slice_num, next_sample, next_sample);
+        pwm_set_both_levels(dac_pwm_b1_slice_num, next_sample, next_sample);
         dly3 = cur_time-last3;
         control_samples[control_sample_no] = sample;
         control_sample_no = (control_sample_no >= 7) ? 0 : (control_sample_no+1);
@@ -123,11 +122,9 @@ void alarm_func(uint alarm_num)
     insert_sample_circ_buf_clean(s);
     s = dsp_process_all_units(s);
     insert_sample_circ_buf(s);
-    if (s > (ADC_PREC_VALUE/2-1)) p = DAC_PWM_WRAP_VALUE-1;
-    else if (s < (-ADC_PREC_VALUE/2)) p = 0;
-    else p = (s+(ADC_PREC_VALUE/2)) / (ADC_PREC_VALUE/DAC_PWM_WRAP_VALUE);
-    pwm_set_both_levels(dac_pwm_b3_slice_num, p, p);
-    pwm_set_both_levels(dac_pwm_b1_slice_num, p, p);
+    if (s > (ADC_PREC_VALUE/2-1)) next_sample = DAC_PWM_WRAP_VALUE-1;
+    else if (s < (-ADC_PREC_VALUE/2)) next_sample = 0;
+    else next_sample = (s+(ADC_PREC_VALUE/2)) / (ADC_PREC_VALUE/DAC_PWM_WRAP_VALUE);
 
     counter++;
 }
@@ -403,10 +400,10 @@ int main()
         sprintf(str,"dlys: %u %u %u",dly1,dly2,dly3);
         ssd1306_set_cursor(0,1);
         ssd1306_printstring(str);
-        sprintf(str,"c1: %u %u",control_samples[0],control_samples[1]);
+        sprintf(str,"c1: %u %u %u",control_samples[0],control_samples[1],control_samples[2]);
         ssd1306_set_cursor(0,2);
         ssd1306_printstring(str);
-        sprintf(str,"c2: %u %u",control_samples[2],control_samples[3]);
+        sprintf(str,"c2: %u %u %u",control_samples[4],control_samples[5],control_samples[6]);
         ssd1306_set_cursor(0,3);
         ssd1306_printstring(str);
         sprintf(str,"buf: %d",sample_circ_buf_value(0));
