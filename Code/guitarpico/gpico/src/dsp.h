@@ -56,6 +56,8 @@ typedef enum
 {
     DSP_TYPE_NONE = 0,
     DSP_TYPE_DELAY,
+    DSP_TYPE_ROOM,
+    DSP_TYPE_COMBINE,
     DSP_TYPE_BANDPASS,
     DSP_TYPE_LOWPASS,
     DSP_TYPE_HIGHPASS,
@@ -105,6 +107,24 @@ typedef struct
 {
     dsp_unit_type  dut;
     bool is_changed;
+    uint32_t delay_samples[8];
+    uint32_t amplitude[8];
+} dsp_type_room;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    bool is_changed;
+    uint32_t prev_amplitude;
+    uint32_t unit[8];
+    uint32_t amplitude[8];
+    uint32_t signbit[8];
+} dsp_type_combine;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    bool is_changed;
     uint16_t frequency;
     uint16_t Q;
     uint32_t control_number1;
@@ -112,8 +132,6 @@ typedef struct
     uint16_t last_frequency;
     uint16_t last_Q;
     int32_t filtb0;
-    int32_t filtb1;
-    int32_t filtb2;
     int32_t filta1;
     int32_t filta2;
     int32_t sampledly1, sampledly2, filtdly1, filtdly2;
@@ -131,7 +149,6 @@ typedef struct
     uint16_t last_Q;
     int32_t filtb0;
     int32_t filtb1;
-    int32_t filtb2;
     int32_t filta1;
     int32_t filta2;
     int32_t sampledly1, sampledly2, filtdly1, filtdly2;
@@ -149,7 +166,6 @@ typedef struct
     uint16_t last_Q;
     int32_t filtb0;
     int32_t filtb1;
-    int32_t filtb2;
     int32_t filta1;
     int32_t filta2;
     int32_t sampledly1, sampledly2, filtdly1, filtdly2;
@@ -165,9 +181,6 @@ typedef struct
     uint32_t pot_value1;
     uint16_t last_frequency;
     uint16_t last_Q;
-    int32_t filtb0;
-    int32_t filtb1;
-    int32_t filtb2;
     int32_t filta1;
     int32_t filta2;
     int32_t sampledly1, sampledly2, filtdly1, filtdly2;
@@ -218,7 +231,6 @@ typedef struct
     uint16_t last_freq1, last_freq2;
     uint16_t last_Q;
     int32_t filtb0;
-    int32_t filtb1;
     int32_t filtb2;
     int32_t filta1;
     int32_t filta2;
@@ -323,6 +335,8 @@ typedef union
     dsp_type_none         dtn;
     dsp_type_sine_synth   dtss;
     dsp_type_delay        dtd;
+    dsp_type_room         dtroom;
+    dsp_type_combine      dtcombine;
     dsp_type_bandpass     dtbp;
     dsp_type_lowpass      dtlp;
     dsp_type_highpass     dthp;

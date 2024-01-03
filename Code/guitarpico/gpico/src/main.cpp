@@ -88,16 +88,29 @@ volatile uint32_t dly1,dly2,dly3;
 
 volatile uint16_t next_sample = 0;
 
+absolute_time_t last_time;
+
+static inline absolute_time_t update_next_timeout(const absolute_time_t last_time, uint32_t us, uint32_t min_us)
+{
+    absolute_time_t next_time = delayed_by_us(last_time, us);
+    absolute_time_t next_time_sooner = make_timeout_time_us(min_us);
+    return (absolute_time_diff_us(next_time, next_time_sooner) < 0) ? next_time : next_time_sooner;
+}
+
 static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
 {
     uint16_t sample;
     uint32_t cur_time;
 
     sample = adc_hw->result;
-    absolute_time_t next_alarm_time = make_timeout_time_us(current_input ? 10 : 30);
-    hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
     cur_time = timer_hw->timelr;
     current_input = (current_input+1) & 0x01;
+    
+    uint32_t dly_sec = current_input ? 10 : 30;
+    last_time = delayed_by_us(last_time, dly_sec);
+    absolute_time_t next_alarm_time = update_next_timeout(last_time, 0, 8);
+    //absolute_time_t next_alarm_time = make_timeout_time_us(dly_sec);
+    hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
     adc_select_input(current_input);
     if (current_input == 0)
     {
@@ -127,6 +140,24 @@ static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
     else next_sample = (s+(ADC_PREC_VALUE/2)) / (ADC_PREC_VALUE/DAC_PWM_WRAP_VALUE);
 
     counter++;
+}
+
+void initialize_periodic_alarm(void)
+{
+    for (uint alarm_no=0;alarm_no<4;alarm_no++)
+    {
+        if (!hardware_alarm_is_claimed(alarm_no))
+        {
+            hardware_alarm_claim_unused(alarm_no);
+            claimed_alarm_num = alarm_no;
+            hardware_alarm_set_callback(claimed_alarm_num, alarm_func);
+            last_time = make_timeout_time_us(1000);
+            absolute_time_t next_alarm_time = update_next_timeout(last_time, 0, 8);
+            //absolute_time_t next_alarm_time = make_timeout_time_us(1000);
+            hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
+            break;
+        }
+    }
 }
 
 void initialize_adc(void)
@@ -170,22 +201,6 @@ void initialize_gpio(void)
     gpio_init(23);
     gpio_set_dir(23, GPIO_OUT);
     gpio_put(23, 1);
-}
-
-void initialize_periodic_alarm(void)
-{
-    for (uint alarm_no=0;alarm_no<4;alarm_no++)
-    {
-        if (!hardware_alarm_is_claimed(alarm_no))
-        {
-            hardware_alarm_claim_unused(alarm_no);
-            claimed_alarm_num = alarm_no;
-            hardware_alarm_set_callback(claimed_alarm_num, alarm_func);
-            absolute_time_t next_alarm_time = make_timeout_time_us(1000);
-            hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
-            break;
-        }
-    }
 }
 
 char buttonpressed(uint8_t b)
@@ -243,7 +258,7 @@ void adjust_parms(uint8_t unit_no)
             display_refresh();
             redraw = 0;            
         }
-        if (button_left() || button_right())
+        if (button_left())
         {
             button_clear();
             break;
@@ -259,7 +274,7 @@ void adjust_parms(uint8_t unit_no)
                 sel++;
                 redraw = 1;
             }
-        } else if (button_enter())
+        } else if (button_right() || button_enter())
         {
             if (sel == 0)
             {
@@ -319,13 +334,13 @@ void adjust_dsp_params(void)
         {
             clear_display();
             write_str(0,0,"DSP Adj");
-            sprintf(s,"Unit #%d", unit_no);
+            sprintf(s,"Unit #%d", unit_no+1);
             write_str_with_spaces(0,1,s,16);
             write_str_with_spaces(0,2,dtnames[dsp_units[unit_no].dtn.dut],16);
             display_refresh();
             redraw = 0;
         }
-        if (button_left() || button_right())
+        if (button_left())
         {
             button_clear();
             break;
@@ -338,9 +353,9 @@ void adjust_dsp_params(void)
         {
             unit_no++;
             redraw = 1;
-        } else if (button_enter())
+        } else if (button_right() || button_enter())
         {
-           sprintf(s,"Unit #%d select", unit_no);
+           sprintf(s,"Unit #%d select", unit_no+1);
            write_str_with_spaces(0,1,s,16);
            adjust_parms(unit_no);
            redraw = 1;
@@ -403,7 +418,7 @@ int main()
         sprintf(str,"c1: %u %u %u",control_samples[0],control_samples[1],control_samples[2]);
         ssd1306_set_cursor(0,2);
         ssd1306_printstring(str);
-        sprintf(str,"c2: %u %u %u",control_samples[4],control_samples[5],control_samples[6]);
+        sprintf(str,"c2: %u %u %u",control_samples[3],control_samples[4],control_samples[5]);
         ssd1306_set_cursor(0,3);
         ssd1306_printstring(str);
         sprintf(str,"buf: %d",sample_circ_buf_value(0));

@@ -125,8 +125,9 @@ int32_t dsp_type_process_delay(int32_t sample, dsp_unit *du)
         du->dtd.pot_value2 = new_input;
         du->dtd.echo_reduction = (du->dtd.pot_value2 * 256) / POT_MAX_VALUE;
     }
-    sample += (sample_circ_buf_value(du->dtd.delay_samples) * ((int16_t)du->dtd.echo_reduction)) / 256;
-    sample /= 2;
+    sample = (sample + ((sample_circ_buf_value(du->dtd.delay_samples) * ((int16_t)du->dtd.echo_reduction)) / 256)) / 2;
+    if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
+    if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
     return sample;
 }
 
@@ -139,7 +140,121 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_delay[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_delay dsp_type_delay_default = { 0, 0, 1000, 128, 0, 0, 0, 0 };
+const dsp_type_delay dsp_type_delay_default = { 0, 0, 10000, 192, 0, 0, 0, 0 };
+
+/************************************DSP_TYPE_ROOM*************************************/
+
+int32_t dsp_type_process_room(int32_t sample, dsp_unit *du)
+{
+    int count = 1;
+    sample *= 256;
+    for (int i=0;i<(sizeof(du->dtroom.delay_samples)/sizeof(du->dtroom.delay_samples[0]));i++)
+    {
+        if (du->dtroom.amplitude[i] != 0)
+        {
+            sample += sample_circ_buf_clean_value(du->dtroom.delay_samples[i]) * du->dtroom.amplitude[i];
+            count++;
+        }
+    }
+    if (count > 4)
+        sample /= (8*256);
+    else if (count > 2)
+        sample /= (4*256);
+    else if (count > 1)
+        sample /= (2*256);
+    else sample /= 256;
+    if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
+    if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
+    return sample;
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_room[] = 
+{
+    { "Sample1",     offsetof(dsp_type_room,delay_samples[0]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Amplitude1",  offsetof(dsp_type_room,amplitude[0]),       4, 3, 0, 255 },
+    { "Sample2",     offsetof(dsp_type_room,delay_samples[1]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Amplitude2",  offsetof(dsp_type_room,amplitude[1]),       4, 3, 0, 255 },
+    { "Sample3",     offsetof(dsp_type_room,delay_samples[2]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Amplitude3",  offsetof(dsp_type_room,amplitude[2]),       4, 3, 0, 255 },
+    { "Sample4",     offsetof(dsp_type_room,delay_samples[3]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Amplitude4",  offsetof(dsp_type_room,amplitude[3]),       4, 3, 0, 255 },
+    { "Sample5",     offsetof(dsp_type_room,delay_samples[4]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Amplitude5",  offsetof(dsp_type_room,amplitude[4]),       4, 3, 0, 255 },
+    { "Sample6",     offsetof(dsp_type_room,delay_samples[5]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Amplitude6",  offsetof(dsp_type_room,amplitude[5]),       4, 3, 0, 255 },
+    { "Sample7",     offsetof(dsp_type_room,delay_samples[6]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Amplitude7",  offsetof(dsp_type_room,amplitude[6]),       4, 3, 0, 255 },
+    { "Sample8",     offsetof(dsp_type_room,delay_samples[7]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Amplitude8",  offsetof(dsp_type_room,amplitude[7]),       4, 3, 0, 255 },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_room dsp_type_room_default = { 0, 0, { 2500, 0, 0, 0, 0, 0, 0, 0 }, {255, 0, 0, 0, 0, 0, 0, 0 } };
+
+/************************************DSP_TYPE_COMBINE*************************************/
+
+int32_t dsp_type_process_combine(int32_t sample, dsp_unit *du)
+{
+    int count = 0;
+    if (du->dtcombine.prev_amplitude > 0)
+    {
+        sample *= du->dtcombine.prev_amplitude;
+        count++;
+    }
+    for (int i=0;i<(sizeof(du->dtcombine.unit)/sizeof(du->dtcombine.unit[0]));i++)
+    {
+        if (du->dtcombine.amplitude[i] != 0)
+        {
+            if (du->dtcombine.signbit[i] != 0)
+                sample -= dsp_unit_result[du->dtcombine.unit[i]-1] * du->dtcombine.amplitude[i];
+            else
+                sample += dsp_unit_result[du->dtcombine.unit[i]-1] * du->dtcombine.amplitude[i];
+            count++;
+        }
+    }
+    if (count > 4)
+        sample /= (8*256);
+    else if (count > 2)
+        sample /= (4*256);
+    else if (count > 1)
+        sample /= (2*256);
+    else sample /= 256;
+    if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
+    if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
+    return sample;
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_combine[] = 
+{
+    { "Ampltiude",   offsetof(dsp_type_combine,prev_amplitude),     4, 3, 0, 255 },
+    { "Unit1",       offsetof(dsp_type_combine,unit[0]),            4, 2, 1, MAX_DSP_UNITS },
+    { "Amplitude1",  offsetof(dsp_type_combine,amplitude[0]),       4, 3, 0, 255 },
+    { "Sign1",       offsetof(dsp_type_combine,signbit[0]),         4, 1, 0, 1 },
+    { "Unit2",       offsetof(dsp_type_combine,unit[1]),            4, 2, 1, MAX_DSP_UNITS },
+    { "Amplitude2",  offsetof(dsp_type_combine,amplitude[1]),       4, 3, 0, 255 },
+    { "Sign2",       offsetof(dsp_type_combine,signbit[1]),         4, 1, 0, 1 },
+    { "Unit3",       offsetof(dsp_type_combine,unit[2]),            4, 2, 1, MAX_DSP_UNITS },
+    { "Amplitude3",  offsetof(dsp_type_combine,amplitude[2]),       4, 3, 0, 255 },
+    { "Sign3",       offsetof(dsp_type_combine,signbit[2]),         4, 1, 0, 1 },
+    { "Unit4",       offsetof(dsp_type_combine,unit[3]),            4, 2, 1, MAX_DSP_UNITS },
+    { "Amplitude4",  offsetof(dsp_type_combine,amplitude[3]),       4, 3, 0, 255 },
+    { "Sign4",       offsetof(dsp_type_combine,signbit[3]),         4, 1, 0, 1 },
+    { "Unit5",       offsetof(dsp_type_combine,unit[4]),            4, 2, 1, MAX_DSP_UNITS },
+    { "Amplitude5",  offsetof(dsp_type_combine,amplitude[4]),       4, 3, 0, 255 },
+    { "Sign5",       offsetof(dsp_type_combine,signbit[4]),         4, 1, 0, 1 },
+    { "Unit6",       offsetof(dsp_type_combine,unit[5]),            4, 2, 1, MAX_DSP_UNITS },
+    { "Amplitude6",  offsetof(dsp_type_combine,amplitude[5]),       4, 3, 0, 255 },
+    { "Sign6",       offsetof(dsp_type_combine,signbit[5]),         4, 1, 0, 1 },
+    { "Unit7",       offsetof(dsp_type_combine,unit[6]),            4, 2, 1, MAX_DSP_UNITS },
+    { "Amplitude7",  offsetof(dsp_type_combine,amplitude[6]),       4, 3, 0, 255 },
+    { "Sign7",       offsetof(dsp_type_combine,signbit[6]),         4, 1, 0, 1 },
+    { "Unit8",       offsetof(dsp_type_combine,unit[7]),            4, 2, 1, MAX_DSP_UNITS },
+    { "Amplitude8",  offsetof(dsp_type_combine,amplitude[7]),       4, 3, 0, 255 },
+    { "Sign7",       offsetof(dsp_type_combine,signbit[7]),         4, 1, 0, 1 },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_combine dsp_type_combine_default = { 0, 0, 255, { 1, 1, 1, 1, 1, 1, 1, 1 }, {0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 } };
 
 /************************************DSP_TYPE_BANDPASS*************************************/
 
@@ -160,12 +275,10 @@ int32_t dsp_type_process_bandpass(int32_t sample, dsp_unit *du)
         float a = float_a_value(w0,du->dtbp.Q);
         float bfpa0 = 1.0f/(1.0f+a);
         du->dtbp.filtb0 = float_to_sampled_int(a * bfpa0);
-        du->dtbp.filtb2 = -du->dtbp.filtb0;
         du->dtbp.filta1 = float_to_sampled_int(-2.0f*cosf(w0)*bfpa0);
         du->dtbp.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
-    filtout =    ((int32_t)du->dtbp.filtb0) * ((int32_t)sample)
-               + ((int32_t)du->dtbp.filtb2) * ((int32_t)du->dtbp.sampledly2) 
+    filtout =    ((int32_t)du->dtbp.filtb0) * ((int32_t)sample - (int32_t)du->dtbp.sampledly2)
                - ((int32_t)du->dtbp.filta1) * ((int32_t)du->dtbp.filtdly1)
                - ((int32_t)du->dtbp.filta2) * ((int32_t)du->dtbp.filtdly2);
     filtout = fractional_int_remove_offset(filtout);
@@ -184,7 +297,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_bandpass[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_bandpass dsp_type_bandpass_default = {0, 0, 400, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const dsp_type_bandpass dsp_type_bandpass_default = {0, 0, 400, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_LOWPASS*************************************/
 
@@ -206,13 +319,12 @@ int32_t dsp_type_process_lowpass(int32_t sample, dsp_unit *du)
         float a = float_a_value(w0,du->dtlp.Q);
         float bfpa0 = 1.0f/(1.0f+a);
         du->dtlp.filtb1 = float_to_sampled_int((1.0f-c0)*bfpa0);
-        du->dtlp.filtb0 = du->dtlp.filtb2 = float_to_sampled_int(0.5*(1.0f-c0)*bfpa0);
+        du->dtlp.filtb0 = float_to_sampled_int(0.5*(1.0f-c0)*bfpa0);
         du->dtlp.filta1 = float_to_sampled_int(-2.0f*c0*bfpa0);
         du->dtlp.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
-    filtout =    ((int32_t)du->dtlp.filtb0) * ((int32_t)sample)
+    filtout =    ((int32_t)du->dtlp.filtb0) * ((int32_t)sample + (int32_t)du->dtlp.sampledly2)
                + ((int32_t)du->dtlp.filtb1) * ((int32_t)du->dtlp.sampledly1)  
-               + ((int32_t)du->dtlp.filtb2) * ((int32_t)du->dtlp.sampledly2) 
                - ((int32_t)du->dtlp.filta1) * ((int32_t)du->dtlp.filtdly1)
                - ((int32_t)du->dtlp.filta2) * ((int32_t)du->dtlp.filtdly2);
     filtout = fractional_int_remove_offset(filtout);
@@ -231,7 +343,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_lowpass[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_lowpass dsp_type_lowpass_default = {0, 0, 400, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const dsp_type_lowpass dsp_type_lowpass_default = {0, 0, 400, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_HIGHPASS*************************************/
 
@@ -253,13 +365,12 @@ int32_t dsp_type_process_highpass(int32_t sample, dsp_unit *du)
         float a = float_a_value(w0,du->dthp.Q);
         float bfpa0 = 1.0f/(1.0f+a);
         du->dthp.filtb1 = float_to_sampled_int(-(1.0f+c0)*bfpa0);
-        du->dthp.filtb0 = du->dthp.filtb2 = float_to_sampled_int(0.5*(1.0f+c0)*bfpa0);
+        du->dthp.filtb0 = float_to_sampled_int(0.5*(1.0f+c0)*bfpa0);
         du->dthp.filta1 = float_to_sampled_int(-2.0f*c0*bfpa0);
         du->dthp.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
-    filtout =    ((int32_t)du->dthp.filtb0) * ((int32_t)sample)
+    filtout =    ((int32_t)du->dthp.filtb0) * ((int32_t)sample + (int32_t)du->dthp.sampledly2)
                + ((int32_t)du->dthp.filtb1) * ((int32_t)du->dthp.sampledly1)  
-               + ((int32_t)du->dthp.filtb2) * ((int32_t)du->dthp.sampledly2) 
                - ((int32_t)du->dthp.filta1) * ((int32_t)du->dthp.filtdly1)
                - ((int32_t)du->dthp.filta2) * ((int32_t)du->dthp.filtdly2);
     filtout = fractional_int_remove_offset(filtout);
@@ -278,7 +389,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_highpass[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_highpass dsp_type_highpass_default = {0, 0, 400, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const dsp_type_highpass dsp_type_highpass_default = {0, 0, 400, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_ALLPASS*************************************/
 
@@ -298,14 +409,12 @@ int32_t dsp_type_process_allpass(int32_t sample, dsp_unit *du)
         float w0 = nyquist_fraction_omega(du->dtap.frequency);
         float a = float_a_value(w0,du->dtap.Q);
         float bfpa0 = 1.0f/(1.0f+a);
-        du->dtap.filtb1 = du->dtap.filta1 = float_to_sampled_int(-2.0f*cosf(w0)*bfpa0);
-        du->dtap.filtb0 = du->dtap.filta2 = float_to_sampled_int((1.0f-a) * bfpa0);
+        du->dtap.filta1 = float_to_sampled_int(-2.0f*cosf(w0)*bfpa0);
+        du->dtap.filta2 = float_to_sampled_int((1.0f-a) * bfpa0);
     }
-    filtout =    ((int32_t)du->dtap.filtb0) * ((int32_t)sample)
-               + ((int32_t)du->dtap.filtb1) * ((int32_t)du->dtap.sampledly1)  
-               + ((int32_t)du->dtap.sampledly2) * float_to_sampled_int(1.0f)
-               - ((int32_t)du->dtap.filta1) * ((int32_t)du->dtap.filtdly1)
-               - ((int32_t)du->dtap.filta2) * ((int32_t)du->dtap.filtdly2);
+    filtout =    ((int32_t)du->dtap.filta2) * ((int32_t)sample - (int32_t)du->dtap.filtdly2)
+               + ((int32_t)du->dtap.filta1) * ((int32_t)du->dtap.sampledly1 - (int32_t)du->dtap.filtdly1)
+               + ((int32_t)du->dtap.sampledly2) * float_to_sampled_int(1.0f);
     filtout = fractional_int_remove_offset(filtout);
     du->dtap.sampledly2 = du->dtap.sampledly1;
     du->dtap.sampledly1 = sample;
@@ -322,7 +431,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_allpass[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_allpass dsp_type_allpass_default = {0, 0, 400, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const dsp_type_allpass dsp_type_allpass_default = {0, 0, 400, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_TREMOLO*************************************/
 
@@ -460,7 +569,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_wah[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_wah dsp_type_wah_default = { 0, 0, 100, 600, 400, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } ;
+const dsp_type_wah dsp_type_wah_default = { 0, 0, 200, 600, 200, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } ;
 
 /************************************DSP_TYPE_DISTORTION*************************************/
 
@@ -723,6 +832,8 @@ const char * const dtnames[] =
 {
     "None",
     "Delay",
+    "Room",
+    "Combine",
     "Bandpass",
     "LowPass",
     "HighPass",
@@ -743,6 +854,8 @@ const dsp_type_configuration_entry * const dtce[] =
 {
     dsp_type_configuration_entry_none,
     dsp_type_configuration_entry_delay, 
+    dsp_type_configuration_entry_room, 
+    dsp_type_configuration_entry_combine, 
     dsp_type_configuration_entry_bandpass, 
     dsp_type_configuration_entry_lowpass, 
     dsp_type_configuration_entry_highpass, 
@@ -762,6 +875,8 @@ const dsp_type_configuration_entry * const dtce[] =
 dsp_type_process * const dtp[] = {
     dsp_type_process_none,
     dsp_type_process_delay,
+    dsp_type_process_room,
+    dsp_type_process_combine,
     dsp_type_process_bandpass,
     dsp_type_process_lowpass,
     dsp_type_process_highpass,
@@ -781,6 +896,8 @@ const void * const dsp_unit_struct_defaults[] =
 {
     (void *) &dsp_type_none_default,
     (void *) &dsp_type_delay_default,
+    (void *) &dsp_type_room_default,
+    (void *) &dsp_type_combine_default,
     (void *) &dsp_type_bandpass_default,
     (void *) &dsp_type_lowpass_default,
     (void *) &dsp_type_highpass_default,

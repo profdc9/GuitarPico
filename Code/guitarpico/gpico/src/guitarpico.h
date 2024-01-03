@@ -29,7 +29,7 @@
 #define GPIO_BUTTON4 22
 #define GPIO_BUTTON5 28
 
-#define GUITARPICO_SAMPLERATE 23808u
+#define GUITARPICO_SAMPLERATE 25000u
 #define POT_MAX_VALUE 16384u
 
 #ifndef LED_PIN
@@ -43,7 +43,7 @@ extern "C"
 
 uint16_t read_potentiometer_value(uint v);
 
-#define POTENTIOMETER_VALUE_SENSITIVITY 5
+#define POTENTIOMETER_VALUE_SENSITIVITY 20
 
 #ifdef __cplusplus
 }
