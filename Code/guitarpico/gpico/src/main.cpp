@@ -390,7 +390,7 @@ int main()
     initialize_dsp();
 //  initialize_sine_counter();
 //    initialize_delay_effect();
-    initialize_bandpass_filter();
+//    initialize_bandpass_filter();
     initialize_gpio();
     buttons_initialize();
     initialize_pwm();
