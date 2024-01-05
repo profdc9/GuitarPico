@@ -70,13 +70,12 @@ inline int16_t fractional_int_remove_offset(int32_t x)
 
 int32_t dsp_type_process_none(int32_t sample, dsp_unit *du)
 {
-    if (du->dtn.source_unit != 0) sample = dsp_unit_result[du->dtn.source_unit-1];
     return sample;
 }
 
 const dsp_type_configuration_entry dsp_type_configuration_entry_none[] = 
 {
-    { "SourceUnit",  offsetof(dsp_type_none,source_unit),        4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",  offsetof(dsp_type_none,source_unit),        4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -127,7 +126,6 @@ int32_t dsp_type_process_delay(int32_t sample, dsp_unit *du)
         du->dtd.pot_value2 = new_input;
         du->dtd.echo_reduction = (du->dtd.pot_value2 * 256) / POT_MAX_VALUE;
     }
-    if (du->dtd.source_unit != 0) sample = dsp_unit_result[du->dtd.source_unit-1];
     sample = (sample + ((sample_circ_buf_value(du->dtd.delay_samples) * ((int16_t)du->dtd.echo_reduction)) / 256)) / 2;
     if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
     if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
@@ -140,7 +138,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_delay[] =
     { "EchoRed",    offsetof(dsp_type_delay,echo_reduction),  4, 3, 0, 255 },
     { "SampCtrl",   offsetof(dsp_type_delay,control_number1), 4, 1, 0, 6 },
     { "EchoCtrl",   offsetof(dsp_type_delay,control_number2), 4, 1, 0, 6 },
-    { "SourceUnit", offsetof(dsp_type_delay,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit", offsetof(dsp_type_delay,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -151,7 +149,6 @@ const dsp_type_delay dsp_type_delay_default = { 0, 0, 10000, 192, 0, 0, 0, 0 };
 int32_t dsp_type_process_room(int32_t sample, dsp_unit *du)
 {
     int count = 1;
-    if (du->dtroom.source_unit != 0) sample = dsp_unit_result[du->dtroom.source_unit-1];
     sample *= 256;
     for (int i=0;i<(sizeof(du->dtroom.delay_samples)/sizeof(du->dtroom.delay_samples[0]));i++)
     {
@@ -179,7 +176,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_room[] =
     { "Amplitude2",  offsetof(dsp_type_room,amplitude[1]),       4, 3, 0, 255 },
     { "Sample3",     offsetof(dsp_type_room,delay_samples[2]),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
     { "Amplitude3",  offsetof(dsp_type_room,amplitude[2]),       4, 3, 0, 255 },
-    { "SourceUnit",  offsetof(dsp_type_room,source_unit),        4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",  offsetof(dsp_type_room,source_unit),        4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -190,7 +187,6 @@ const dsp_type_room dsp_type_room_default = { 0, 0, { 2500, 0, 0, }, {255, 0, 0 
 int32_t dsp_type_process_combine(int32_t sample, dsp_unit *du)
 {
     int count = 0;
-    if (du->dtcombine.source_unit != 0) sample = dsp_unit_result[du->dtcombine.source_unit-1];
     if (du->dtcombine.prev_amplitude > 0)
     {
         sample *= du->dtcombine.prev_amplitude;
@@ -229,7 +225,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_combine[] =
     { "Unit3",       offsetof(dsp_type_combine,unit[2]),            4, 2, 1, MAX_DSP_UNITS },
     { "Amplitude3",  offsetof(dsp_type_combine,amplitude[2]),       4, 3, 0, 255 },
     { "Sign3",       offsetof(dsp_type_combine,signbit[2]),         4, 1, 0, 1 },
-    { "SourceUnit",  offsetof(dsp_type_combine,source_unit),        4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",  offsetof(dsp_type_combine,source_unit),        4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -257,7 +253,6 @@ int32_t dsp_type_process_bandpass(int32_t sample, dsp_unit *du)
         du->dtbp.filta1 = float_to_sampled_int(-2.0f*cosf(w0)*bfpa0);
         du->dtbp.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
-    if (du->dtbp.source_unit != 0) sample = dsp_unit_result[du->dtbp.source_unit-1];
     filtout =    ((int32_t)du->dtbp.filtb0) * ((int32_t)sample - (int32_t)du->dtbp.sampledly2)
                - ((int32_t)du->dtbp.filta1) * ((int32_t)du->dtbp.filtdly1)
                - ((int32_t)du->dtbp.filta2) * ((int32_t)du->dtbp.filtdly2);
@@ -274,7 +269,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_bandpass[] =
     { "Frequency",   offsetof(dsp_type_bandpass,frequency),       2, 4, 100, 4000 },
     { "Q",           offsetof(dsp_type_bandpass,Q),               2, 3, 50, 999 },
     { "FreqCntrl",   offsetof(dsp_type_bandpass,control_number1), 4, 1, 0, 6 },
-    { "SourceUnit",  offsetof(dsp_type_bandpass,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",  offsetof(dsp_type_bandpass,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -304,7 +299,6 @@ int32_t dsp_type_process_lowpass(int32_t sample, dsp_unit *du)
         du->dtlp.filta1 = float_to_sampled_int(-2.0f*c0*bfpa0);
         du->dtlp.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
-    if (du->dtlp.source_unit != 0) sample = dsp_unit_result[du->dtlp.source_unit-1];
     filtout =    ((int32_t)du->dtlp.filtb0) * ((int32_t)sample + (int32_t)du->dtlp.sampledly2)
                + ((int32_t)du->dtlp.filtb1) * ((int32_t)du->dtlp.sampledly1)  
                - ((int32_t)du->dtlp.filta1) * ((int32_t)du->dtlp.filtdly1)
@@ -322,7 +316,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_lowpass[] =
     { "Frequency",   offsetof(dsp_type_lowpass,frequency),       2, 4, 100, 4000 },
     { "Q",           offsetof(dsp_type_lowpass,Q),               2, 3, 50, 999 },
     { "FreqCntrl",   offsetof(dsp_type_lowpass,control_number1), 4, 1, 0, 6 },
-    { "SourceUnit",  offsetof(dsp_type_lowpass,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",  offsetof(dsp_type_lowpass,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -352,7 +346,6 @@ int32_t dsp_type_process_highpass(int32_t sample, dsp_unit *du)
         du->dthp.filta1 = float_to_sampled_int(-2.0f*c0*bfpa0);
         du->dthp.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
-    if (du->dthp.source_unit != 0) sample = dsp_unit_result[du->dthp.source_unit-1];
     filtout =    ((int32_t)du->dthp.filtb0) * ((int32_t)sample + (int32_t)du->dthp.sampledly2)
                + ((int32_t)du->dthp.filtb1) * ((int32_t)du->dthp.sampledly1)  
                - ((int32_t)du->dthp.filta1) * ((int32_t)du->dthp.filtdly1)
@@ -370,7 +363,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_highpass[] =
     { "Frequency",   offsetof(dsp_type_highpass,frequency),       2, 4, 100, 4000 },
     { "Q",           offsetof(dsp_type_highpass,Q),               2, 3, 50, 999 },
     { "FreqCntrl",   offsetof(dsp_type_highpass,control_number1), 4, 1, 0, 6 },
-    { "SourceUnit",  offsetof(dsp_type_highpass,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",  offsetof(dsp_type_highpass,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -397,7 +390,6 @@ int32_t dsp_type_process_allpass(int32_t sample, dsp_unit *du)
         du->dtap.filta1 = float_to_sampled_int(-2.0f*cosf(w0)*bfpa0);
         du->dtap.filta2 = float_to_sampled_int((1.0f-a) * bfpa0);
     }
-    if (du->dtap.source_unit != 0) sample = dsp_unit_result[du->dtap.source_unit-1];
     filtout =    ((int32_t)du->dtap.filta2) * ((int32_t)sample - (int32_t)du->dtap.filtdly2)
                + ((int32_t)du->dtap.filta1) * ((int32_t)du->dtap.sampledly1 - (int32_t)du->dtap.filtdly1)
                + ((int32_t)du->dtap.sampledly2) * float_to_sampled_int(1.0f);
@@ -414,7 +406,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_allpass[] =
     { "Frequency",   offsetof(dsp_type_allpass,frequency),       2, 4, 100, 4000 },
     { "Q",           offsetof(dsp_type_allpass,Q),               2, 3, 50, 999 },
     { "FreqCntrl",   offsetof(dsp_type_allpass,control_number1), 4, 1, 0, 6 },
-    { "SourceUnit",  offsetof(dsp_type_allpass,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",  offsetof(dsp_type_allpass,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -444,7 +436,6 @@ int32_t dsp_type_process_tremolo(int32_t sample, dsp_unit *du)
     du->dttrem.sine_counter += du->dttrem.sine_counter_inc;
     int32_t sine_val = sine_table_entry((du->dttrem.sine_counter & 0xFFFF) / 256);
     int32_t mod_val = ((sine_val * du->dttrem.modulation) + QUANTIZATION_MAX * 256) / 512;
-    if (du->dttrem.source_unit != 0) sample = dsp_unit_result[du->dttrem.source_unit-1];
     sample = (sample * mod_val) / QUANTIZATION_MAX;
     return sample;
 }
@@ -455,7 +446,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_tremolo[] =
     { "Modulation",   offsetof(dsp_type_tremolo,modulation),      4, 3, 0, 255 },
     { "FreqCntrl",    offsetof(dsp_type_tremolo,control_number1), 4, 1, 0, 6 },
     { "ModCntrl",     offsetof(dsp_type_tremolo,control_number2), 4, 1, 0, 6 },
-    { "SourceUnit",   offsetof(dsp_type_tremolo,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_tremolo,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -486,7 +477,6 @@ int32_t dsp_type_process_vibrato(int32_t sample, dsp_unit *du)
     int32_t sine_val = sine_table_entry((du->dtvibr.sine_counter & 0xFFFF) / 256);
     int32_t mod_val = ((sine_val * du->dtvibr.modulation) + QUANTIZATION_MAX * 256) / 512;
     uint32_t delay_samples = (du->dtvibr.delay_samples * mod_val) / QUANTIZATION_MAX;
-    if (du->dtvibr.source_unit != 0) sample = dsp_unit_result[du->dtvibr.source_unit-1];
     sample = sample_circ_buf_clean_value(delay_samples);
     return sample;
 }
@@ -498,7 +488,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_vibrato[] =
     { "Samples",      offsetof(dsp_type_vibrato,delay_samples),   4, 5, 1, SAMPLE_CIRC_BUF_SIZE },
     { "FreqCntrl",    offsetof(dsp_type_vibrato,control_number1), 4, 1, 0, 6 },
     { "ModCntrl",     offsetof(dsp_type_vibrato,control_number2), 4, 1, 0, 6 },
-    { "SourceUnit",   offsetof(dsp_type_vibrato,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_vibrato,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -537,7 +527,6 @@ int32_t dsp_type_process_wah(int32_t sample, dsp_unit *du)
         du->dtwah.filta1 = du->dtwah.filta1_interp1 + ((du->dtwah.filta1_interp2 - du->dtwah.filta1_interp1) * 
                             (du->dtwah.reverse ? new_input : (POT_MAX_VALUE-1) - new_input )) / POT_MAX_VALUE;
     }
-    if (du->dtwah.source_unit != 0) sample = dsp_unit_result[du->dtwah.source_unit-1];
     filtout =    ((int32_t)du->dtwah.filtb0) * ((int32_t)sample)
                + ((int32_t)du->dtwah.filtb2) * ((int32_t)du->dtwah.sampledly2) 
                - ((int32_t)du->dtwah.filta1) * ((int32_t)du->dtwah.filtdly1)
@@ -557,7 +546,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_wah[] =
     { "Q",            offsetof(dsp_type_wah,Q),               2, 3, 50, 999 },
     { "FreqCntrl",    offsetof(dsp_type_wah,control_number1), 4, 1, 0, 6 },
     { "Reverse",      offsetof(dsp_type_wah,reverse),         4, 1, 0, 1 },
-    { "SourceUnit",   offsetof(dsp_type_wah,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_wah,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -604,7 +593,6 @@ int32_t dsp_type_process_autowah(int32_t sample, dsp_unit *du)
     du->dtautowah.sine_counter += du->dtautowah.sine_counter_inc;
     int32_t sine_val = QUANTIZATION_MAX - 1 - abs(sine_table_entry((du->dtautowah.sine_counter & 0xFFFF0) / 4096));
 
-    if (du->dtautowah.source_unit != 0) sample = dsp_unit_result[du->dtautowah.source_unit-1];
     
     du->dtautowah.filta1 = du->dtautowah.filta1_interp1 + ((du->dtautowah.filta1_interp2 - du->dtautowah.filta1_interp1) * 
                             sine_val) / QUANTIZATION_MAX;
@@ -628,7 +616,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_autowah[] =
     { "Q",            offsetof(dsp_type_autowah,Q),                2, 3, 50,  999 },
     { "Speed",        offsetof(dsp_type_autowah,frequency),        4, 4, 1, 4095 },
     { "SpeedCntrl",   offsetof(dsp_type_autowah,control_number1),  4, 1, 0, 6 },
-    { "SourceUnit",   offsetof(dsp_type_autowah,source_unit),      4, 2, 0,   MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_autowah,source_unit),      4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -655,7 +643,6 @@ int32_t dsp_type_process_distortion(int32_t sample, dsp_unit *du)
         du->dtdist.last_sample_offset = du->dtdist.sample_offset;
         du->dtdist.offset_value = ((int32_t)du->dtdist.sample_offset)*(ADC_PREC_VALUE/256);
     }
-    if (du->dtdist.source_unit != 0) sample = dsp_unit_result[du->dtdist.source_unit-1];
     if ((sample > du->dtdist.low_threshold) && (sample < du->dtdist.high_threshold))
         sample = 0;
     sample = ((sample+du->dtdist.offset_value) * (du->dtdist.gain + 32)) / 32;
@@ -670,7 +657,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_distortion[] =
     { "NoiseGate",    offsetof(dsp_type_distortion,noise_gate),              4, 3, 0, 255 },
     { "Offset",       offsetof(dsp_type_distortion,sample_offset),           4, 3, 0, 255 },
     { "GainCntrl",    offsetof(dsp_type_distortion,control_number1),         4, 1, 0, 6 },
-    { "SourceUnit",   offsetof(dsp_type_distortion,source_unit),             4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_distortion,source_unit),             4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -701,7 +688,6 @@ int32_t dsp_type_process_overdrive(int32_t sample, dsp_unit *du)
         du->dtovr.y0x0 = du->dtovr.y0 * QUANTIZATION_MAX / du->dtovr.x0;
         du->dtovr.y01 = (ADC_PREC_VALUE - du->dtovr.y0) * QUANTIZATION_MAX / (ADC_PREC_VALUE - du->dtovr.x0);
     }
-    if (du->dtovr.source_unit != 0) sample = dsp_unit_result[du->dtovr.source_unit-1];
     int32_t absample = (sample < 0) ? -sample : sample;
     if (absample <= du->dtovr.x0)
     {
@@ -719,7 +705,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_overdrive[] =
     { "Ampltiude",    offsetof(dsp_type_overdrive,amplitude),               4, 3, 1, 255 },
     { "ThrshCntrl",   offsetof(dsp_type_overdrive,control_number1),         4, 1, 0, 6 },
     { "AmplCntrl",    offsetof(dsp_type_overdrive,control_number2),         4, 1, 0, 6 },
-    { "SourceUnit",   offsetof(dsp_type_overdrive,source_unit),             4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_overdrive,source_unit),             4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -742,7 +728,6 @@ int32_t dsp_type_process_ring(int32_t sample, dsp_unit *du)
     }
     du->dtring.sine_counter += du->dtring.sine_counter_inc;
     int32_t sine_val = sine_table_entry((du->dtring.sine_counter & 0xFFFF00) / 4096);
-    if (du->dtring.source_unit != 0) sample = dsp_unit_result[du->dtring.source_unit-1];
     sample = fractional_int_remove_offset(sample * sine_val);
     return sample;
 }
@@ -751,7 +736,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_ring[] =
 {
     { "Speed",        offsetof(dsp_type_ring,frequency),       4, 3, 1, 4095 },
     { "SpeedCntrl",   offsetof(dsp_type_ring,control_number1), 4, 1, 0, 6 },
-    { "SourceUnit",   offsetof(dsp_type_ring,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_ring,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -783,7 +768,6 @@ int32_t dsp_type_process_flange(int32_t sample, dsp_unit *du)
     int32_t sine_val = sine_table_entry((du->dtflng.sine_counter & 0xFFFF00) / 4096);
     int32_t mod_val = ((sine_val * du->dtflng.modulation) + QUANTIZATION_MAX * 256) / 512;
     uint32_t delay_samples = (du->dtflng.delay_samples * mod_val) / QUANTIZATION_MAX;
-    if (du->dtflng.source_unit != 0) sample = dsp_unit_result[du->dtflng.source_unit-1];
     sample = (sample_circ_buf_clean_value(delay_samples) * du->dtflng.mixval + sample * (255 - du->dtflng.mixval)) / 256;
     return sample;
 
@@ -797,7 +781,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_flange[] =
     { "Mixval",       offsetof(dsp_type_flange,mixval),          4, 3, 0, 255 },
     { "SpeedCntrl",   offsetof(dsp_type_flange,control_number1), 4, 1, 0, 6 },
     { "ModCntrl",     offsetof(dsp_type_flange,control_number2), 4, 1, 0, 6 },
-    { "SourceUnit",   offsetof(dsp_type_flange,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_flange,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -858,8 +842,6 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
     du->dtphaser.a_filta1 = du->dtphaser.a_filta1_interp1 + ((du->dtphaser.a_filta1_interp2 - du->dtphaser.a_filta1_interp1) * 
                             sine_val) / QUANTIZATION_MAX;
 
-    if (du->dtphaser.source_unit != 0) sample = dsp_unit_result[du->dtphaser.source_unit-1];
-
     filtout =    ((int32_t)du->dtphaser.a_filta2) * (((int32_t)sample) - ((int32_t)du->dtphaser.a_filtdly2))
                + ((int32_t)du->dtphaser.a_filta1) * (((int32_t)du->dtphaser.a_sampledly1) - ((int32_t)du->dtphaser.a_filtdly1))
                + ((int32_t)du->dtphaser.a_sampledly2) * float_to_sampled_int(1.0f);
@@ -894,7 +876,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] =
     { "Speed",        offsetof(dsp_type_phaser,frequency),       4, 4, 1, 4095 },
     { "Mixval",       offsetof(dsp_type_phaser,mixval),          4, 3, 0, 255 },
     { "SpeedCntrl",   offsetof(dsp_type_phaser,control_number1), 4, 1, 0, 6 },
-    { "SourceUnit",   offsetof(dsp_type_phaser,source_unit),     4, 2, 0, MAX_DSP_UNITS },
+    { "SourceUnit",   offsetof(dsp_type_phaser,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
@@ -993,14 +975,17 @@ const void * const dsp_unit_struct_defaults[] =
 
 /********************* DSP PROCESS STRUCTURE *******************************************/
 
-void dsp_unit_initialize(dsp_unit *du, dsp_unit_type dut)
+void dsp_unit_initialize(int dsp_unit_number, dsp_unit_type dut)
 {
+    dsp_unit *du = dsp_unit_entry(dsp_unit_number);
+    
     dsp_unit_struct_zero(du);
     memcpy((void *)du, dsp_unit_struct_defaults[dut], sizeof(dsp_unit));
     du->dtn.dut = dut;
+    du->dtn.source_unit = dsp_unit_number + 1;
 }
 
-int32_t dsp_process(int32_t sample, dsp_unit *du)
+static inline int32_t dsp_process(int32_t sample, dsp_unit *du)
 {
     return dtp[(int)du->dtn.dut](sample, du);
 }
@@ -1009,13 +994,17 @@ void initialize_dsp(void)
 {
     initialize_sine_table();
     initialize_sample_circ_buf();
-    memset((void *)dsp_units,'\000',sizeof(dsp_units));
+    for (int unit_number=0;unit_number<MAX_DSP_UNITS;unit_number++) 
+        dsp_unit_initialize(unit_number, DSP_TYPE_NONE);
 }
 
 int32_t dsp_process_all_units(int32_t sample)
 {
     dsp_unit_result[0] = sample;
-    for (int i=0;i<MAX_DSP_UNITS;i++)
-        dsp_unit_result[i+1] = dsp_process(dsp_unit_result[i], &dsp_units[i]);
+    for (int unit_no=0;unit_no<MAX_DSP_UNITS;unit_no++)
+    {
+        dsp_unit *du = dsp_unit_entry(unit_no);
+        dsp_unit_result[unit_no+1] = dsp_process(dsp_unit_result[du->dtn.source_unit-1], du);
+    }
     return dsp_unit_result[MAX_DSP_UNITS];
 }

@@ -380,7 +380,7 @@ typedef int32_t (dsp_type_process)(int32_t sample, dsp_unit *du);
 
 int32_t dsp_process_all_units(int32_t sample);
 void dsp_unit_struct_zero(dsp_unit *du);
-void dsp_unit_initialize(dsp_unit *du, dsp_unit_type dut);
+void dsp_unit_initialize(int dsp_unit_number, dsp_unit_type dut);
 
 extern const void * const dsp_unit_struct_defaults[];
 extern dsp_unit dsp_units[];

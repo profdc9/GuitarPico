@@ -291,9 +291,7 @@ void adjust_parms(uint8_t unit_no)
                 if (res == 3)
                 {
                     if (mst.item != dsp_units[unit_no].dtn.dut)
-                    {
-                        dsp_unit_initialize(&dsp_units[unit_no], (dsp_unit_type)mst.item);
-                    }
+                        dsp_unit_initialize(unit_no, (dsp_unit_type)mst.item);
                 }
             } else
             {
@@ -367,19 +365,19 @@ int main2();
 
 void initialize_delay_effect()
 {
-    dsp_unit_initialize(dsp_unit_entry(0), DSP_TYPE_DELAY);;
+    dsp_unit_initialize(0, DSP_TYPE_DELAY);;
     dsp_unit_entry(0)->dtd.delay_samples = 10000;
     dsp_unit_entry(0)->dtd.echo_reduction = 192;
 }
 
 void initialize_sine_counter()
 {
-    dsp_unit_initialize(dsp_unit_entry(0), DSP_TYPE_SINE_SYNTH );
+    dsp_unit_initialize(0, DSP_TYPE_SINE_SYNTH );
 }
 
 void initialize_bandpass_filter()
 {
-    dsp_unit_initialize(dsp_unit_entry(0), DSP_TYPE_BANDPASS );
+    dsp_unit_initialize(0, DSP_TYPE_BANDPASS );
 }
 
 int main()
