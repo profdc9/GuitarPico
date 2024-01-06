@@ -97,10 +97,12 @@ static inline absolute_time_t update_next_timeout(const absolute_time_t last_tim
     return (absolute_time_diff_us(next_time, next_time_sooner) < 0) ? next_time : next_time_sooner;
 }
 
+
 static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
 {
     uint16_t sample;
     uint32_t cur_time;
+    static int32_t sample_avg;
 
     sample = adc_hw->result;
     cur_time = timer_hw->timelr;
@@ -132,6 +134,10 @@ static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
     dly2 = cur_time-last2;
 
     int16_t s = (sample - (ADC_MAX_VALUE/2))*(ADC_PREC_VALUE/ADC_MAX_VALUE);
+    sample_avg = (sample_avg*511)/512 + s;
+    s -= (sample_avg / 512);
+    if (s < (-ADC_PREC_VALUE/2)) s = (-ADC_PREC_VALUE/2);
+    if (s > (ADC_PREC_VALUE/2-1)) s = (ADC_PREC_VALUE/2-1);
     insert_sample_circ_buf_clean(s);
     s = dsp_process_all_units(s);
     insert_sample_circ_buf(s);
@@ -363,23 +369,6 @@ void adjust_dsp_params(void)
 
 int main2();
 
-void initialize_delay_effect()
-{
-    dsp_unit_initialize(0, DSP_TYPE_DELAY);;
-    dsp_unit_entry(0)->dtd.delay_samples = 10000;
-    dsp_unit_entry(0)->dtd.echo_reduction = 192;
-}
-
-void initialize_sine_counter()
-{
-    dsp_unit_initialize(0, DSP_TYPE_SINE_SYNTH );
-}
-
-void initialize_bandpass_filter()
-{
-    dsp_unit_initialize(0, DSP_TYPE_BANDPASS );
-}
-
 int main()
 {
     char str[40];
@@ -389,6 +378,7 @@ int main()
 //  initialize_sine_counter();
 //    initialize_delay_effect();
 //    initialize_bandpass_filter();
+    dsp_unit_initialize(0, DSP_TYPE_ENVELOPE );
     initialize_gpio();
     buttons_initialize();
     initialize_pwm();

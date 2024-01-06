@@ -31,6 +31,8 @@ void initialize_sample_circ_buf(void)
 {
     memset((void *)sample_circ_buf, '\000', sizeof(sample_circ_buf));
     sample_circ_buf_offset = 0;
+    memset((void *)sample_circ_buf_clean, '\000', sizeof(sample_circ_buf_clean));
+    sample_circ_buf_clean_offset = 0;
 }
 
 void dsp_unit_struct_zero(dsp_unit *du)
@@ -109,6 +111,45 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_sin_synth[] =
 };
 
 const dsp_type_sine_synth dsp_type_sine_synth_default = { 0, 0, 0, 3000, 0, 0, 0, 0 };
+
+/************************************DSP_TYPE_NOISEGATE**********************************/
+
+int32_t dsp_type_process_noisegate(int32_t sample, dsp_unit *du)
+{
+    uint32_t new_input = read_potentiometer_value(du->dtnoise.control_number1);
+    if (abs(new_input - du->dtnoise.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtnoise.pot_value1 = new_input;
+        du->dtnoise.threshold = (du->dtnoise.pot_value1 * (ADC_PREC_VALUE/2)) / (POT_MAX_VALUE*16);
+    }
+    
+    uint32_t envfilt;
+    uint32_t abssample = sample < 0 ? -sample : sample;
+    switch (du->dtnoise.response)
+    {
+        case 1:  du->dtnoise.envelope = (du->dtnoise.envelope*127)/128 + abssample;
+                 envfilt = du->dtnoise.envelope / 128;
+                 break;
+        case 2:  du->dtnoise.envelope = (du->dtnoise.envelope*255)/256 + abssample;
+                 envfilt = du->dtnoise.envelope / 256;
+                 break;
+        case 3:  du->dtnoise.envelope = (du->dtnoise.envelope*511)/512 + abssample;
+                 envfilt = du->dtnoise.envelope / 512;
+                 break;
+    }
+    return (envfilt > du->dtnoise.threshold) ? sample : 0;
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_noisegate[] = 
+{
+    { "Threshold",       offsetof(dsp_type_noisegate,threshold),           4, 5, 1, ADC_PREC_VALUE/2 },
+    { "Response",        offsetof(dsp_type_noisegate,response),            4, 1, 1, 3 },
+    { "ThresholdCtrl",   offsetof(dsp_type_noisegate,control_number1),     4, 1, 0, 6 },
+    { "SourceUnit", offsetof(dsp_type_noisegate,source_unit),     4, 2, 1, MAX_DSP_UNITS },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_noisegate dsp_type_noisegate_default = { 0, 0, 30, 3, 0, 0, 0  };
 
 /************************************DSP_TYPE_DELAY*************************************/
 
@@ -515,7 +556,6 @@ int32_t dsp_type_process_wah(int32_t sample, dsp_unit *du)
         float a = float_a_value(w2, du->dtwah.Q);
         float bfpa0 = 1.0f/(1.0f+a);
         du->dtwah.filtb0 = float_to_sampled_int(a * bfpa0);
-        du->dtwah.filtb2 = -du->dtwah.filtb0;
         du->dtwah.filta1_interp1 = du->dtwah.filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
         du->dtwah.filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
         du->dtwah.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
@@ -527,8 +567,7 @@ int32_t dsp_type_process_wah(int32_t sample, dsp_unit *du)
         du->dtwah.filta1 = du->dtwah.filta1_interp1 + ((du->dtwah.filta1_interp2 - du->dtwah.filta1_interp1) * 
                             (du->dtwah.reverse ? new_input : (POT_MAX_VALUE-1) - new_input )) / POT_MAX_VALUE;
     }
-    filtout =    ((int32_t)du->dtwah.filtb0) * ((int32_t)sample)
-               + ((int32_t)du->dtwah.filtb2) * ((int32_t)du->dtwah.sampledly2) 
+    filtout =    ((int32_t)du->dtwah.filtb0) * ((int32_t)sample - (int32_t)du->dtwah.sampledly2)
                - ((int32_t)du->dtwah.filta1) * ((int32_t)du->dtwah.filtdly1)
                - ((int32_t)du->dtwah.filta2) * ((int32_t)du->dtwah.filtdly2);
     filtout = fractional_int_remove_offset(filtout);
@@ -550,7 +589,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_wah[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_wah dsp_type_wah_default = { 0, 0, 200, 900, 400, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } ;
+const dsp_type_wah dsp_type_wah_default = { 0, 0, 200, 900, 400, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } ;
 
 /************************************DSP_TYPE_AUTOWAH*************************************/
 
@@ -584,21 +623,19 @@ int32_t dsp_type_process_autowah(int32_t sample, dsp_unit *du)
         float a = float_a_value(w2, du->dtautowah.Q);
         float bfpa0 = 1.0f/(1.0f+a);
         du->dtautowah.filtb0 = float_to_sampled_int(a * bfpa0);
-        du->dtautowah.filtb2 = -du->dtautowah.filtb0;
         du->dtautowah.filta1_interp1 = du->dtautowah.filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
         du->dtautowah.filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
         du->dtautowah.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
 
     du->dtautowah.sine_counter += du->dtautowah.sine_counter_inc;
-    int32_t sine_val = QUANTIZATION_MAX - 1 - abs(sine_table_entry((du->dtautowah.sine_counter & 0xFFFF0) / 4096));
+    int32_t sine_val = (QUANTIZATION_MAX - 1) - abs(sine_table_entry((du->dtautowah.sine_counter & 0xFFFF0) / 4096));
 
     
     du->dtautowah.filta1 = du->dtautowah.filta1_interp1 + ((du->dtautowah.filta1_interp2 - du->dtautowah.filta1_interp1) * 
                             sine_val) / QUANTIZATION_MAX;
  
-    filtout =    ((int32_t)du->dtautowah.filtb0) * ((int32_t)sample)
-               + ((int32_t)du->dtautowah.filtb2) * ((int32_t)du->dtautowah.sampledly2) 
+    filtout =    ((int32_t)du->dtautowah.filtb0) * ((int32_t)sample - (int32_t)du->dtautowah.sampledly2)
                - ((int32_t)du->dtautowah.filta1) * ((int32_t)du->dtautowah.filtdly1)
                - ((int32_t)du->dtautowah.filta2) * ((int32_t)du->dtautowah.filtdly2);
     filtout = fractional_int_remove_offset(filtout);
@@ -620,7 +657,93 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_autowah[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_autowah dsp_type_autowah_default = { 0, 0, 200, 900, 400, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const dsp_type_autowah dsp_type_autowah_default = { 0, 0, 200, 900, 400, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+/************************************DSP_TYPE_ENVELOPE*************************************/
+
+int32_t dsp_type_process_envelope(int32_t sample, dsp_unit *du)
+{
+    int32_t filtout;
+
+    if ((du->dtenv.freq1 != du->dtenv.last_freq1) || (du->dtenv.freq2 != du->dtenv.last_freq2) || (du->dtenv.Q != du->dtenv.last_Q))
+    {
+        du->dtenv.last_freq1 = du->dtenv.freq1;
+        du->dtenv.last_freq2 = du->dtenv.freq2;
+        du->dtenv.last_Q = du->dtenv.Q;
+        float w1 = nyquist_fraction_omega(du->dtenv.freq1);
+        float w2 = nyquist_fraction_omega(du->dtenv.freq2);
+        if (w1 > w2)
+        {
+            float temp = w1;
+            w1 = w2;
+            w2 = temp;
+        }
+        float a = float_a_value(w2, du->dtenv.Q);
+        float bfpa0 = 1.0f/(1.0f+a);
+        du->dtenv.filtb0 = float_to_sampled_int(a * bfpa0);
+        du->dtenv.filta1_interp1 = du->dtenv.filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
+        du->dtenv.filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
+        du->dtenv.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
+    }
+
+    uint32_t envfilt;
+    uint32_t abssample = sample < 0 ? -sample : sample;
+
+    switch (du->dtenv.response)
+    {
+        case 1:  du->dtenv.envelope = (du->dtenv.envelope*127)/128 + abssample;
+                 envfilt = du->dtenv.envelope / 128;
+                 break;
+        case 2:  du->dtenv.envelope = (du->dtenv.envelope*255)/256 + abssample;
+                 envfilt = du->dtenv.envelope / 256;
+                 break;
+        case 3:  du->dtenv.envelope = (du->dtenv.envelope*511)/512 + abssample;
+                 envfilt = du->dtenv.envelope / 512;
+                 break;
+    }
+    switch (du->dtenv.sensitivity)
+    {
+        case 1:  if (envfilt > (ADC_PREC_VALUE/16-1)) envfilt = ADC_PREC_VALUE/16-1;    
+                 envfilt =  ((envfilt * (SINE_TABLE_ENTRIES/4) ) / (ADC_PREC_VALUE/16));
+                 break;
+        case 2:  if (envfilt > (ADC_PREC_VALUE/8-1)) envfilt = ADC_PREC_VALUE/8-1;    
+                 envfilt =  ((envfilt * (SINE_TABLE_ENTRIES/4) ) / (ADC_PREC_VALUE/8));
+                 break;
+        case 3:  if (envfilt > (ADC_PREC_VALUE/4-1)) envfilt = ADC_PREC_VALUE/4-1;    
+                 envfilt =  ((envfilt * (SINE_TABLE_ENTRIES/4) ) / (ADC_PREC_VALUE/4));
+                 break;
+        case 4:  if (envfilt > (ADC_PREC_VALUE/2-1)) envfilt = ADC_PREC_VALUE/2-1;    
+                 envfilt =  ((envfilt * (SINE_TABLE_ENTRIES/4) ) / (ADC_PREC_VALUE/2));
+                 break;
+    }           
+    int32_t sin_val = (QUANTIZATION_MAX - 1) - sine_table_entry(envfilt  + (du->dtenv.reverse ? 0 : (SINE_TABLE_ENTRIES/4)));
+    du->dtenv.filta1 = du->dtenv.filta1_interp1 + ((du->dtenv.filta1_interp2 - du->dtenv.filta1_interp1) * 
+                            sin_val) / QUANTIZATION_MAX;
+ 
+    filtout =    ((int32_t)du->dtenv.filtb0) * ((int32_t)sample - (int32_t)du->dtenv.sampledly2)
+               - ((int32_t)du->dtenv.filta1) * ((int32_t)du->dtenv.filtdly1)
+               - ((int32_t)du->dtenv.filta2) * ((int32_t)du->dtenv.filtdly2);
+    filtout = fractional_int_remove_offset(filtout);
+    du->dtenv.sampledly2 = du->dtenv.sampledly1;
+    du->dtenv.sampledly1 = sample;
+    du->dtenv.filtdly2 = du->dtenv.filtdly1;
+    du->dtenv.filtdly1 = filtout;
+    return filtout;
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_envelope[] = 
+{
+    { "Freq1",        offsetof(dsp_type_envelope,freq1),            2, 4, 100, 4000 },
+    { "Freq2",        offsetof(dsp_type_envelope,freq2),            2, 4, 100, 4000 },
+    { "Q",            offsetof(dsp_type_envelope,Q),                2, 3, 50,  999 },
+    { "Sensitivity",  offsetof(dsp_type_envelope,sensitivity),      4, 1, 1, 4 },
+    { "Response",     offsetof(dsp_type_envelope,response),         4, 1, 1, 3 },
+    { "Reverse",      offsetof(dsp_type_envelope,reverse),          4, 1, 0, 1 },
+    { "SourceUnit",   offsetof(dsp_type_envelope,source_unit),      4, 2, 1, MAX_DSP_UNITS },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_envelope dsp_type_envelope_default = { 0, 0, 200, 1500, 400, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_DISTORTION*************************************/
 
@@ -726,8 +849,15 @@ int32_t dsp_type_process_ring(int32_t sample, dsp_unit *du)
         du->dtring.last_frequency = du->dtring.frequency;
         du->dtring.sine_counter_inc = du->dtring.frequency;
     }
+
     du->dtring.sine_counter += du->dtring.sine_counter_inc;
     int32_t sine_val = sine_table_entry((du->dtring.sine_counter & 0xFFFF00) / 4096);
+    if (!du->dtring.sine_mix)
+    {
+        sine_val *= 4;
+        if (sine_val >= (QUANTIZATION_MAX-1)) sine_val = QUANTIZATION_MAX - 1;
+        if (sine_val < (-QUANTIZATION_MAX)) sine_val = -QUANTIZATION_MAX;
+    }
     sample = fractional_int_remove_offset(sample * sine_val);
     return sample;
 }
@@ -735,12 +865,13 @@ int32_t dsp_type_process_ring(int32_t sample, dsp_unit *du)
 const dsp_type_configuration_entry dsp_type_configuration_entry_ring[] = 
 {
     { "Speed",        offsetof(dsp_type_ring,frequency),       4, 3, 1, 4095 },
+    { "SineMix",      offsetof(dsp_type_ring,sine_mix),        4, 1, 0, 1 },
     { "SpeedCntrl",   offsetof(dsp_type_ring,control_number1), 4, 1, 0, 6 },
     { "SourceUnit",   offsetof(dsp_type_ring,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_ring dsp_type_ring_default = { 0, 0, 0, 0, 60, 0, 0, 0 };
+const dsp_type_ring dsp_type_ring_default = { 0, 0, 0, 0, 60, 1, 0, 0, 0 };
 
 
 /************************************DSP_TYPE_FLANGE*************************************/
@@ -882,11 +1013,49 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] =
 
 const dsp_type_phaser dsp_type_phaser_default = { 0, 0, 200, 800, 200, 60, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  } ;
 
+/************************************DSP_TYPE_BACKWARDS*********************************/
+
+int32_t dsp_type_process_backwards(int32_t sample, dsp_unit *du)
+{
+    uint32_t new_input = read_potentiometer_value(du->dtback.control_number1);
+    if (abs(new_input - du->dtback.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtback.pot_value1 = new_input;
+        du->dtback.backwards_samples = (du->dtback.pot_value1 * SAMPLE_CIRC_BUF_SIZE) / POT_MAX_VALUE;
+    }
+    new_input = read_potentiometer_value(du->dtback.control_number2);
+    if (abs(new_input - du->dtback.pot_value2) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtback.pot_value2 = new_input;
+        du->dtback.balance = (du->dtback.pot_value2 * 256) / POT_MAX_VALUE;
+    }
+    du->dtback.samples_count = (du->dtback.samples_count == 0) ? du->dtback.backwards_samples : (du->dtback.samples_count-1);
+    sample = (sample * ((int32_t)(255 - du->dtback.balance)) + 
+                       ((int32_t)sample_circ_buf_clean_value(du->dtback.samples_count)) * ((int32_t)du->dtback.balance)) / 256;
+    if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
+    if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
+    return sample;
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_backwards[] = 
+{
+    { "Samples",    offsetof(dsp_type_backwards,backwards_samples),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE },
+    { "Balance",     offsetof(dsp_type_backwards,balance),             4, 3, 0, 255 },
+    { "SampCtrl",   offsetof(dsp_type_backwards,control_number1), 4, 1, 0, 6 },
+    { "BalCtrl",   offsetof(dsp_type_backwards,control_number2), 4, 1, 0, 6 },
+    { "SourceUnit", offsetof(dsp_type_backwards,source_unit),     4, 2, 1, MAX_DSP_UNITS },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_backwards dsp_type_backwards_default = { 0, 0, 2000, 255, 0, 0, 0, 0, 0 };
+
+
 /************STRUCTURES FOR ALL DSP TYPES *****************************/
 
 const char * const dtnames[] = 
 {
     "None",
+    "NoiseGate",
     "Delay",
     "Room",
     "Combine",
@@ -898,11 +1067,13 @@ const char * const dtnames[] =
     "Vibrato",
     "Wah",
     "AutoWah",
+    "Envelope",
     "Distortion",
     "Overdrive",
     "Ring",
     "Flange",
     "Phaser",
+    "Backwards",
     "Sin Synth",
     NULL
 };
@@ -910,6 +1081,7 @@ const char * const dtnames[] =
 const dsp_type_configuration_entry * const dtce[] = 
 {
     dsp_type_configuration_entry_none,
+    dsp_type_configuration_entry_noisegate, 
     dsp_type_configuration_entry_delay, 
     dsp_type_configuration_entry_room, 
     dsp_type_configuration_entry_combine, 
@@ -921,17 +1093,20 @@ const dsp_type_configuration_entry * const dtce[] =
     dsp_type_configuration_entry_vibrato, 
     dsp_type_configuration_entry_wah, 
     dsp_type_configuration_entry_autowah, 
+    dsp_type_configuration_entry_envelope, 
     dsp_type_configuration_entry_distortion, 
     dsp_type_configuration_entry_overdrive, 
     dsp_type_configuration_entry_ring, 
     dsp_type_configuration_entry_flange, 
     dsp_type_configuration_entry_phaser, 
+    dsp_type_configuration_entry_backwards, 
     dsp_type_configuration_entry_sin_synth, 
     NULL
 };
 
 dsp_type_process * const dtp[] = {
     dsp_type_process_none,
+    dsp_type_process_noisegate,
     dsp_type_process_delay,
     dsp_type_process_room,
     dsp_type_process_combine,
@@ -943,17 +1118,20 @@ dsp_type_process * const dtp[] = {
     dsp_type_process_vibrato,
     dsp_type_process_wah,
     dsp_type_process_autowah,
+    dsp_type_process_envelope,
     dsp_type_process_distortion,
     dsp_type_process_overdrive,
     dsp_type_process_ring,
     dsp_type_process_flange,
     dsp_type_process_phaser,
+    dsp_type_process_backwards,
     dsp_type_process_sin_synth,
 };
 
 const void * const dsp_unit_struct_defaults[] =
 {
     (void *) &dsp_type_none_default,
+    (void *) &dsp_type_noisegate_default,
     (void *) &dsp_type_delay_default,
     (void *) &dsp_type_room_default,
     (void *) &dsp_type_combine_default,
@@ -965,11 +1143,13 @@ const void * const dsp_unit_struct_defaults[] =
     (void *) &dsp_type_vibrato_default,
     (void *) &dsp_type_wah_default,
     (void *) &dsp_type_autowah_default,
+    (void *) &dsp_type_envelope_default,
     (void *) &dsp_type_distortion_default,
     (void *) &dsp_type_overdrive_default,
     (void *) &dsp_type_ring_default,
     (void *) &dsp_type_flange_default,
     (void *) &dsp_type_phaser_default,
+    (void *) &dsp_type_backwards_default,
     (void *) &dsp_type_sine_synth_default
 };
 

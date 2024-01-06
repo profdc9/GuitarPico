@@ -55,6 +55,7 @@ void initialize_dsp(void);
 typedef enum 
 {
     DSP_TYPE_NONE = 0,
+    DSP_TYPE_NOISEGATE,
     DSP_TYPE_DELAY,
     DSP_TYPE_ROOM,
     DSP_TYPE_COMBINE,
@@ -66,11 +67,13 @@ typedef enum
     DSP_TYPE_VIBRATO,
     DSP_TYPE_WAH,
     DSP_TYPE_AUTOWAH,
+    DSP_TYPE_ENVELOPE,
     DSP_TYPE_DISTORTION,
     DSP_TYPE_OVERDRIVE,
     DSP_TYPE_RING,
     DSP_TYPE_FLANGE,
     DSP_TYPE_PHASER,
+    DSP_TYPE_BACKWARDS,
     DSP_TYPE_SINE_SYNTH
 } dsp_unit_type;
 
@@ -91,6 +94,17 @@ typedef struct
     uint32_t frequency;
     uint32_t last_frequency;
 } dsp_type_sine_synth;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    uint32_t source_unit;
+    uint32_t threshold;
+    uint32_t response;
+    uint32_t envelope;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+} dsp_type_noisegate;
 
 typedef struct
 {
@@ -232,7 +246,6 @@ typedef struct
     uint16_t last_freq1, last_freq2;
     uint16_t last_Q;
     int32_t filtb0;
-    int32_t filtb2;
     int32_t filta1;
     int32_t filta2;
     int32_t filta1_interp1;
@@ -255,13 +268,32 @@ typedef struct
     uint32_t sine_counter_inc;
     uint32_t last_frequency;
     int32_t filtb0;
-    int32_t filtb2;
     int32_t filta1;
     int32_t filta2;
     int32_t filta1_interp1;
     int32_t filta1_interp2;
     int32_t sampledly1, sampledly2, filtdly1, filtdly2;
 } dsp_type_autowah;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    uint32_t source_unit;
+    uint16_t freq1, freq2;
+    uint16_t Q;
+    uint32_t response;
+    uint32_t sensitivity;
+    uint32_t reverse;
+    uint16_t last_freq1, last_freq2;
+    uint16_t last_Q;
+    int32_t filtb0;
+    int32_t filta1;
+    int32_t filta2;
+    int32_t filta1_interp1;
+    int32_t filta1_interp2;
+    int32_t sampledly1, sampledly2, filtdly1, filtdly2;
+    uint32_t envelope;
+} dsp_type_envelope;
 
 typedef struct
 {
@@ -303,6 +335,7 @@ typedef struct
     uint32_t sine_counter;
     uint32_t sine_counter_inc;
     uint32_t frequency;
+    uint32_t sine_mix;
     uint32_t last_frequency;
     uint32_t control_number1;
     uint32_t pot_value1;
@@ -353,10 +386,24 @@ typedef struct
     uint32_t pot_value1;
 } dsp_type_phaser;
 
+typedef struct
+{
+    dsp_unit_type  dut;
+    uint32_t source_unit;
+    uint32_t backwards_samples;
+    uint32_t balance;
+    uint32_t samples_count;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+    uint32_t control_number2;
+    uint32_t pot_value2;
+} dsp_type_backwards;
+
 typedef union 
 {
     dsp_type_none         dtn;
     dsp_type_sine_synth   dtss;
+    dsp_type_noisegate    dtnoise;
     dsp_type_delay        dtd;
     dsp_type_room         dtroom;
     dsp_type_combine      dtcombine;
@@ -368,11 +415,13 @@ typedef union
     dsp_type_vibrato      dtvibr;
     dsp_type_wah          dtwah;
     dsp_type_autowah      dtautowah;
+    dsp_type_envelope     dtenv;
     dsp_type_distortion   dtdist;
     dsp_type_overdrive    dtovr;
     dsp_type_ring         dtring;
     dsp_type_flange       dtflng;
     dsp_type_phaser       dtphaser;
+    dsp_type_backwards    dtback;
 } dsp_unit;
 
 typedef bool    (dsp_type_initialize)(void *initialization_data, dsp_unit *du);
