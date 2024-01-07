@@ -432,7 +432,7 @@ void dsp_unit_struct_zero(dsp_unit *du);
 void dsp_unit_initialize(int dsp_unit_number, dsp_unit_type dut);
 
 extern const void * const dsp_unit_struct_defaults[];
-extern dsp_unit dsp_units[];
+extern dsp_unit dsp_units[MAX_DSP_UNITS];
 
 inline dsp_unit *dsp_unit_entry(uint e)
 {

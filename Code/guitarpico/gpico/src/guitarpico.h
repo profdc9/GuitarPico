@@ -6,6 +6,9 @@
 #include "hardware/adc.h"
 #include "hardware/dma.h"
 #include "hardware/timer.h"
+#include "hardware/sync.h"
+#include "hardware/flash.h"
+#include "pico/multicore.h"
 
 #define DAC_PWM_B3 15
 #define DAC_PWM_B2 14

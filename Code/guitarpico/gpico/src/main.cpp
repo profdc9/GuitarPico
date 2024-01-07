@@ -16,6 +16,7 @@
 #include <math.h>
 
 void initialize_video(void);
+void halt_video(void);
 
 #define POLLING_FREQUENCY_HZ 50000u
 #define POLLING_FREQUENCY_US (1000000u/POLLING_FREQUENCY_HZ)
@@ -369,34 +370,181 @@ void adjust_dsp_params(void)
 
 int main2();
 
-int main()
+#define FLASH_BANKS 10
+#define FLASH_PAGE_BYTES 4096u
+#define FLASH_OFFSET_STORED (2*1024*1024)
+#define FLASH_BASE_ADR 0x10000000
+#define FLASH_MAGIC_NUMBER 0xFEEDBA1F
+
+#define FLASH_PAGES(x) ((((x)+(FLASH_PAGE_BYTES-1))/FLASH_PAGE_BYTES)*FLASH_PAGE_BYTES)
+
+uint32_t last_gen_no = 0;
+
+typedef struct _flash_layout_data
+{
+    uint32_t magic_number;
+    uint32_t gen_no;
+    dsp_unit dsp_units[MAX_DSP_UNITS];
+} flash_layout_data;
+
+typedef union _flash_layout
+{ 
+    flash_layout_data fld;
+    uint8_t      space[FLASH_PAGE_BYTES];
+} flash_layout;
+
+inline static uint32_t flash_offset_bank(uint bankno)
+{
+    return (FLASH_OFFSET_STORED - FLASH_PAGES(sizeof(flash_layout)) * (bankno+1));
+}
+
+inline static const uint8_t *flash_offset_address_bank(uint bankno)
+{
+    const uint8_t *const flashadr = (const uint8_t *const) FLASH_BASE_ADR;
+    return &flashadr[flash_offset_bank(bankno)];
+}
+
+void message_to_display(const char *msg)
+{
+    write_str_with_spaces(0,5,msg,16);
+    display_refresh();
+
+    buttons_clear();
+    for (;;)
+    {
+       buttons_poll();
+       if (button_enter()) break;
+     }
+}
+
+int write_data_to_flash(uint32_t flash_offset, const uint8_t *data, uint core, uint32_t length)
+{
+    length = FLASH_PAGES(length);                // pad up to next 4096 byte boundary
+    flash_offset = FLASH_PAGES(flash_offset);
+    if (!multicore_lockout_victim_is_initialized(core))
+        return -1;
+    multicore_lockout_start_blocking();
+    uint32_t ints = save_and_disable_interrupts();
+    flash_range_erase(flash_offset, length);
+    flash_range_program(flash_offset, data, length);
+    restore_interrupts(ints);
+    multicore_lockout_end_blocking();
+    return 0;
+}
+
+uint select_bankno(void)
+{
+    uint bankno = 1;
+    bool notend = true;
+    
+    while (notend)
+    {
+        char s[20];
+        sprintf(s,"Sel Bank: %02d", bankno);          
+        write_str_with_spaces(0,4,s,16);
+        display_refresh();
+        buttons_clear();
+        for (;;)
+        {
+            buttons_poll();
+            if (button_enter())
+            {
+                notend = false;
+                break;
+            }
+            if (button_left()) return 0;
+            if ((button_up()) && (bankno < (FLASH_BANKS))) 
+            {
+                bankno++;
+                break;
+            }
+            if ((button_down()) && (bankno > 1)) 
+            {
+                bankno--;
+                break;
+            }
+        }
+    }
+    return bankno;
+}
+
+int flash_load(void)
+{
+    uint bankno;
+    int ret = 0;
+    
+    if ((bankno = select_bankno()) == 0) return -1;
+    bankno--;
+    flash_layout *fl = (flash_layout *) flash_offset_address_bank(bankno);
+
+    if (fl->fld.magic_number == FLASH_MAGIC_NUMBER)
+    {
+        if (fl->fld.gen_no > last_gen_no)
+            last_gen_no = fl->fld.gen_no;
+        memcpy((void *)dsp_units, (void *) &fl->fld.dsp_units, sizeof(dsp_units));
+    } else ret = -1;
+   
+    message_to_display(ret ? "Not Loaded" : "Loaded");
+    return ret;
+}
+
+void flash_load_most_recent(void)
+{
+    uint32_t newest_gen_no = 0;
+    flash_layout *fln = NULL;
+    for (uint bankno = 0;bankno < FLASH_BANKS; bankno++)
+    {
+        flash_layout *fl = (flash_layout *) flash_offset_address_bank(bankno);
+        if (fl->fld.magic_number == FLASH_MAGIC_NUMBER)
+        {
+            if (fl->fld.gen_no >= newest_gen_no)
+            {
+                newest_gen_no = fl->fld.gen_no;
+                fln = fl;
+            }
+        }
+    }
+    if (fln != NULL)
+    {
+        last_gen_no = newest_gen_no;
+        memcpy((void *)dsp_units, (void *) &fln->fld.dsp_units, sizeof(dsp_units));
+    }
+}
+
+void flash_save(void)
+{
+    uint bankno;
+    flash_layout *fl;
+
+    if ((bankno = select_bankno()) == 0) return;
+    bankno--;
+    if ((fl = (flash_layout *)malloc(sizeof(flash_layout))) == NULL) return;    
+    memset((void *)fl,'\000',sizeof(flash_layout));
+    fl->fld.magic_number = FLASH_MAGIC_NUMBER;
+    fl->fld.gen_no = (++last_gen_no);
+    memcpy((void *)&fl->fld.dsp_units, (void *)dsp_units, sizeof(fl->fld.dsp_units));
+    int ret = write_data_to_flash(flash_offset_bank(bankno), (uint8_t *) fl, 1, sizeof(flash_layout));
+    free(fl);
+
+    message_to_display(ret ? "Save Failed" : "Save Succeeded");      
+}
+
+void debugstuff(void)
 {
     char str[40];
+    bool endloop = false;
     
-    stdio_init_all();
-    initialize_dsp();
-//  initialize_sine_counter();
-//    initialize_delay_effect();
-//    initialize_bandpass_filter();
-    dsp_unit_initialize(0, DSP_TYPE_NOISEGATE );
-    dsp_unit_initialize(1, DSP_TYPE_OVERDRIVE );
-    dsp_unit_initialize(2, DSP_TYPE_PHASER );
-    initialize_gpio();
-    buttons_initialize();
-    initialize_pwm();
-    ssd1306_Initialize();
-    initialize_video();
-    initialize_adc();
-    initialize_periodic_alarm();
-    
-    ssd1306_set_cursor(0,0);
-    for (;;)
+    while (!endloop)
     {
         uint32_t last_time = time_us_32();
         while ((time_us_32() - last_time) < 100000)
         {
             buttons_poll();
-            if (button_enter()) adjust_dsp_params();
+            if (button_enter()) 
+            {
+                endloop = true;
+                break;
+            }
         }
         ssd1306_Clear_Buffer();
         sprintf(str,"%u %c%c%c%c%c",counter,buttonpressed(0),buttonpressed(1),buttonpressed(2),buttonpressed(3),buttonpressed(4));
@@ -417,10 +565,58 @@ int main()
         sprintf(str,"rate %u",(uint32_t)((((uint64_t)counter)*1000000)/time_us_32()));
         ssd1306_set_cursor(0,5);
         ssd1306_printstring(str);
+        sprintf(str,"data %u",sizeof(dsp_units));
+        ssd1306_set_cursor(0,6);
+        ssd1306_printstring(str);
         ssd1306_render();
         test_all_control();
     }
+}
+
+const char * const mainmenu[] = { "Adjust", "Debug", "Load", "Save", NULL };
+
+menu_str mainmenu_str = { mainmenu, 0, 2, 15, 0, 0 };
+
+int main()
+{
+    stdio_init_all();
+    initialize_dsp();
+    initialize_gpio();
+    buttons_initialize();
+    initialize_pwm();
+    ssd1306_Initialize();
+    initialize_video();
+    initialize_adc();
+    initialize_periodic_alarm();
+    flash_load_most_recent();
     
+    ssd1306_set_cursor(0,0);
+    for (;;)
+    {
+        
+        ssd1306_Clear_Buffer();
+        ssd1306_set_cursor(0,0);
+        ssd1306_printstring("GuitarPico");
+        do_show_menu_item(&mainmenu_str);
+        buttons_clear();
+        for (;;)
+        {
+            buttons_poll();
+            uint val = do_menu(&mainmenu_str);
+            if ((val == 2) || (val == 3)) break;
+        }
+        switch (mainmenu_str.item)
+        {
+            case 0:  adjust_dsp_params();
+                     break;
+            case 1:  debugstuff();
+                     break;
+            case 2:  flash_load();
+                     break;
+            case 3:  flash_save();
+                     break;
+        }
+    }
 }
 
 
@@ -553,6 +749,11 @@ void initialize_video(void)
 
     // initialize videomode
     VideoInit();
+}
+
+void halt_video(void)
+{
+    VgaInitReq(NULL);
 }
 
 int main2()
