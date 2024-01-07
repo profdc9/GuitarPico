@@ -1031,6 +1031,7 @@ void VgaCore()
 {
 	const sVmode* v;
 	void (*fnc)();
+    multicore_lockout_victim_init ();
 	while (1)
 	{
 		__dmb();

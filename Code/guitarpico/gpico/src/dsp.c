@@ -784,7 +784,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_distortion[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_distortion dsp_type_distortion_default = { 0, 0, 128, 3, 0, 0, 0, 0, 0, 0, 0, 0 };
+const dsp_type_distortion dsp_type_distortion_default = { 0, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_OVERDRIVE*************************************/
 
@@ -819,6 +819,7 @@ int32_t dsp_type_process_overdrive(int32_t sample, dsp_unit *du)
     {
         absample = fractional_int_remove_offset((absample - du->dtovr.x0) * du->dtovr.y01) + du->dtovr.y0;
     }
+    if (absample > (ADC_PREC_VALUE/2-1)) absample = (ADC_PREC_VALUE/2-1);
     return (sample < 0) ? -absample : absample;
 }
 
@@ -899,7 +900,7 @@ int32_t dsp_type_process_flange(int32_t sample, dsp_unit *du)
     int32_t sine_val = sine_table_entry((du->dtflng.sine_counter & 0xFFFF00) / 4096);
     int32_t mod_val = ((sine_val * du->dtflng.modulation) + QUANTIZATION_MAX * 256) / 512;
     uint32_t delay_samples = (du->dtflng.delay_samples * mod_val) / QUANTIZATION_MAX;
-    sample = (sample_circ_buf_clean_value(delay_samples) * du->dtflng.mixval + sample * (255 - du->dtflng.mixval)) / 256;
+    sample = (sample_circ_buf_clean_value(delay_samples) * ((int32_t)du->dtflng.mixval) + sample * ((int32_t)(255 - du->dtflng.mixval))) / 256;
     return sample;
 
 }
@@ -948,7 +949,7 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
             w1 = w2;
             w2 = temp;
         }
-        float a = float_a_value(w2, du->dtphaser.Q);
+        float a = float_a_value(w1, du->dtphaser.Q);
         float bfpa0 = 1.0f/(1.0f+a);
         du->dtphaser.a_filta1_interp1 = du->dtphaser.a_filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
         du->dtphaser.a_filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
@@ -962,7 +963,7 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
             w1 = w2;
             w2 = temp;
         }
-        a = float_a_value(w2, du->dtphaser.Q);
+        a = float_a_value(w1, du->dtphaser.Q);
         bfpa0 = 1.0f/(1.0f+a);
         du->dtphaser.b_filta1_interp1 = du->dtphaser.b_filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
         du->dtphaser.b_filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
@@ -996,7 +997,9 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
     du->dtphaser.b_filtdly2 = du->dtphaser.b_filtdly1;
     du->dtphaser.b_filtdly1 = filtout2;
 
-    return (filtout2 * du->dtphaser.mixval + sample * (255 - du->dtphaser.mixval)) / 256;
+    filtout2 = (filtout2 * ((int32_t)du->dtphaser.mixval) + sample * ((int32_t)(255 - du->dtphaser.mixval))) / 256;
+
+    return filtout2;
 }
 
 const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] = 

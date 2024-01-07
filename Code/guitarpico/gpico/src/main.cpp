@@ -378,7 +378,9 @@ int main()
 //  initialize_sine_counter();
 //    initialize_delay_effect();
 //    initialize_bandpass_filter();
-    dsp_unit_initialize(0, DSP_TYPE_ENVELOPE );
+    dsp_unit_initialize(0, DSP_TYPE_NOISEGATE );
+    dsp_unit_initialize(1, DSP_TYPE_OVERDRIVE );
+    dsp_unit_initialize(2, DSP_TYPE_PHASER );
     initialize_gpio();
     buttons_initialize();
     initialize_pwm();
