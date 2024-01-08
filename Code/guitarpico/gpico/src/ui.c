@@ -342,22 +342,25 @@ uint8_t scroll_alpha_find_key(scroll_alpha_dat *sad, uint8_t key)
 
 void scroll_alpha_key(scroll_alpha_dat *sad)
 {
-  uint8_t redraw = 1;
+  uint8_t redraw = 0;
 
   setcursor(sad->col + sad->cursorpos, sad->row);
   idle_task();
   if (button_enter())
   { 
     sad->entered = 1;
+    redraw = 1;
     return;
   } else if (button_left())
   {
+    redraw = 1;
     if (sad->position > 0)
       sad->position--;
     else
       sad->exited = 1;
   } else if (button_right())
   {
+    redraw = 1;
     if (sad->position < (sad->numchars - 1))
       sad->position++;
     else
@@ -371,6 +374,7 @@ void scroll_alpha_key(scroll_alpha_dat *sad)
       if ((++val) >= sad->num_validchars) val = 0;
       sad->buffer[sad->position] = sad->validchars[val];
       sad->changed = 1;
+      redraw = 1;
     }
   } else if (button_down())
   {
@@ -382,6 +386,7 @@ void scroll_alpha_key(scroll_alpha_dat *sad)
       else val--;
       sad->buffer[sad->position] = sad->validchars[val];
       sad->changed = 1;
+      redraw = 1;
     }
   } 
   if (redraw)

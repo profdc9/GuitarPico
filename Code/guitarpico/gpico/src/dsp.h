@@ -74,7 +74,8 @@ typedef enum
     DSP_TYPE_FLANGE,
     DSP_TYPE_PHASER,
     DSP_TYPE_BACKWARDS,
-    DSP_TYPE_SINE_SYNTH
+    DSP_TYPE_SINE_SYNTH,
+    DSP_TYPE_MAX_ENTRY
 } dsp_unit_type;
 
 typedef struct
@@ -449,8 +450,16 @@ typedef struct
     uint32_t   maxval;
 } dsp_type_configuration_entry;
 
+bool dsp_unit_set_value(uint dsp_unit_number, const char *desc, uint32_t value);
+bool dsp_unit_get_value(uint dsp_unit_number, const char *desc, uint32_t *value);
+dsp_unit_type dsp_unit_get_type(uint dsp_unit_number);
+const dsp_type_configuration_entry *dsp_unit_get_configuration_entry(uint dsp_unit_number, uint num);
+
 extern const dsp_type_configuration_entry * const dtce[];
 extern const char * const dtnames[];
+
+uint32_t dsp_read_value_prec(void *v, int prec);
+void dsp_set_value_prec(void *v, int prec, uint32_t val);
 
 #ifdef __cplusplus
 }

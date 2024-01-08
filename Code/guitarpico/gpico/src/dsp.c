@@ -1158,9 +1158,35 @@ const void * const dsp_unit_struct_defaults[] =
 
 /********************* DSP PROCESS STRUCTURE *******************************************/
 
+uint32_t dsp_read_value_prec(void *v, int prec)
+{
+    if (prec == 1)
+        return *((uint8_t *)v);
+    if (prec == 2)
+        return *((uint16_t *)v);
+    return *((uint32_t *)v);
+}
+
+void dsp_set_value_prec(void *v, int prec, uint32_t val)
+{
+    if (prec == 1)
+    {
+        *((uint8_t *)v) = val;
+        return;
+    }
+    if (prec == 2)
+    {
+        *((uint16_t *)v) = val;
+        return;
+    }
+    *((uint32_t *)v) = val;
+}
+
 void dsp_unit_initialize(int dsp_unit_number, dsp_unit_type dut)
 {
     dsp_unit *du = dsp_unit_entry(dsp_unit_number);
+    
+    if (dut >= DSP_TYPE_MAX_ENTRY) return;
     
     dsp_unit_struct_zero(du);
     memcpy((void *)du, dsp_unit_struct_defaults[dut], sizeof(dsp_unit));
@@ -1190,4 +1216,64 @@ int32_t dsp_process_all_units(int32_t sample)
         dsp_unit_result[unit_no+1] = dsp_process(dsp_unit_result[du->dtn.source_unit-1], du);
     }
     return dsp_unit_result[MAX_DSP_UNITS];
+}
+
+dsp_unit_type dsp_unit_get_type(uint dsp_unit_number)
+{
+    if (dsp_unit_number >= MAX_DSP_UNITS) return DSP_TYPE_NONE;
+    dsp_unit *du = dsp_unit_entry(dsp_unit_number);
+    return du->dtn.dut;
+}
+
+const dsp_type_configuration_entry *dsp_unit_get_configuration_entry(uint dsp_unit_number, uint num)
+{
+    if (dsp_unit_number >= MAX_DSP_UNITS) return NULL;
+    dsp_unit *du = dsp_unit_entry(dsp_unit_number);
+    const dsp_type_configuration_entry *dtce_l = dtce[du->dtn.dut];
+    while (dtce_l->desc != NULL)
+    {
+        if (num == 0) return dtce_l;
+        num--;
+        dtce_l++;
+    }
+    return NULL;
+}
+
+bool dsp_unit_set_value(uint dsp_unit_number, const char *desc, uint32_t value)
+{
+    if (dsp_unit_number >= MAX_DSP_UNITS) return NULL;
+    dsp_unit *du = dsp_unit_entry(dsp_unit_number);
+    const dsp_type_configuration_entry *dtce_l = dtce[du->dtn.dut];
+    while (dtce_l->desc != NULL)
+    {
+        if (!strcmp(dtce_l->desc,desc))
+        {
+           if ((value >= dtce_l->minval) && (value <= dtce_l->maxval))
+           {
+                dsp_set_value_prec((void *)(((uint8_t *)dsp_unit_entry(dsp_unit_number)) + dtce_l->offset), dtce_l->size, value); 
+                return true;
+           } else return false;
+            
+        }
+        dtce_l++;
+    }
+    return false;
+}
+
+bool dsp_unit_get_value(uint dsp_unit_number, const char *desc, uint32_t *value)
+{
+    if (dsp_unit_number >= MAX_DSP_UNITS) return NULL;
+    dsp_unit *du = dsp_unit_entry(dsp_unit_number);
+    const dsp_type_configuration_entry *dtce_l = dtce[du->dtn.dut];
+    while (dtce_l->desc != NULL)
+    {
+        if (!strcmp(dtce_l->desc,desc))
+        {
+           uint32_t v = dsp_read_value_prec((void *)(((uint8_t *)dsp_unit_entry(dsp_unit_number)) + dtce_l->offset), dtce_l->size);
+           *value = v;
+           return true;
+        }
+        dtce_l++;
+    }
+    return false;
 }

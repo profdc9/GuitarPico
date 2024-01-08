@@ -11,6 +11,7 @@
 #include "buttons.h"
 #include "dsp.h"
 #include "ui.h"
+#include "tinycl.h"
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -21,8 +22,10 @@ void halt_video(void);
 #define POLLING_FREQUENCY_HZ 50000u
 #define POLLING_FREQUENCY_US (1000000u/POLLING_FREQUENCY_HZ)
 
+#define UNCLAIMED_ALARM 0xFFFFFFFF
+
 uint dac_pwm_b3_slice_num, dac_pwm_b2_slice_num, dac_pwm_b1_slice_num, dac_pwm_b0_slice_num;
-uint claimed_alarm_num;
+uint claimed_alarm_num = UNCLAIMED_ALARM;
 
 const u8* Fonts[5] = { FontBold8x8, FontGame8x8, FontIbm8x8, FontItalic8x8, FontThin8x8 };
 
@@ -149,19 +152,33 @@ static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
     counter++;
 }
 
+void reset_periodic_alarm(void)
+{
+    if (claimed_alarm_num == UNCLAIMED_ALARM) return;
+    
+    hardware_alarm_cancel(claimed_alarm_num);
+    hardware_alarm_set_callback(claimed_alarm_num, alarm_func);
+    last_time = make_timeout_time_us(1000);
+    absolute_time_t next_alarm_time = update_next_timeout(last_time, 0, 8);
+    //absolute_time_t next_alarm_time = make_timeout_time_us(1000);
+    hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
+}
+
+
 void initialize_periodic_alarm(void)
 {
+    if (claimed_alarm_num != UNCLAIMED_ALARM)
+    {
+        reset_periodic_alarm();
+        return;
+    }
     for (uint alarm_no=0;alarm_no<4;alarm_no++)
     {
         if (!hardware_alarm_is_claimed(alarm_no))
         {
             hardware_alarm_claim_unused(alarm_no);
             claimed_alarm_num = alarm_no;
-            hardware_alarm_set_callback(claimed_alarm_num, alarm_func);
-            last_time = make_timeout_time_us(1000);
-            absolute_time_t next_alarm_time = update_next_timeout(last_time, 0, 8);
-            //absolute_time_t next_alarm_time = make_timeout_time_us(1000);
-            hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
+            reset_periodic_alarm();
             break;
         }
     }
@@ -215,30 +232,6 @@ char buttonpressed(uint8_t b)
     return button_readbutton(b) ? '1' : '0';
 }
 
-uint32_t read_value_prec(void *v, int prec)
-{
-    if (prec == 1)
-        return *((uint8_t *)v);
-    if (prec == 2)
-        return *((uint16_t *)v);
-    return *((uint32_t *)v);
-}
-
-void set_value_prec(void *v, int prec, uint32_t val)
-{
-    if (prec == 1)
-    {
-        *((uint8_t *)v) = val;
-        return;
-    }
-    if (prec == 2)
-    {
-        *((uint16_t *)v) = val;
-        return;
-    }
-    *((uint32_t *)v) = val;
-}
-
 void adjust_parms(uint8_t unit_no)
 {
     int sel = 0, redraw = 1;
@@ -258,7 +251,7 @@ void adjust_parms(uint8_t unit_no)
                 char s[20];
                 write_str_with_spaces(0,2,d[sel-1].desc,16);
                 char *c = number_str(s, 
-                    read_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size), 
+                    dsp_read_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size), 
                     d[sel-1].digits, 0);
                 write_str_with_spaces(0,3,c,16);
             }
@@ -308,7 +301,7 @@ void adjust_parms(uint8_t unit_no)
                                           d[sel-1].minval,
                                           d[sel-1].maxval,
                                           0,
-                                          read_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size),
+                                          dsp_read_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size),
                                           0, 0 };
                 scroll_number_start(&snd);
                 do
@@ -317,7 +310,7 @@ void adjust_parms(uint8_t unit_no)
                     scroll_number_key(&snd);
                 } while (!snd.entered);
                 if (snd.changed)
-                   set_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size, snd.n);
+                   dsp_set_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size, snd.n);
             }
             redraw = 1;
         }
@@ -374,16 +367,18 @@ int main2();
 #define FLASH_PAGE_BYTES 4096u
 #define FLASH_OFFSET_STORED (2*1024*1024)
 #define FLASH_BASE_ADR 0x10000000
-#define FLASH_MAGIC_NUMBER 0xFEEDBA1F
+#define FLASH_MAGIC_NUMBER 0xFEEDBA1E
 
 #define FLASH_PAGES(x) ((((x)+(FLASH_PAGE_BYTES-1))/FLASH_PAGE_BYTES)*FLASH_PAGE_BYTES)
 
-uint32_t last_gen_no = 0;
+uint32_t last_gen_no;
+uint8_t  desc[16];
 
 typedef struct _flash_layout_data
 {
     uint32_t magic_number;
     uint32_t gen_no;
+    uint8_t  desc[16];
     dsp_unit dsp_units[MAX_DSP_UNITS];
 } flash_layout_data;
 
@@ -429,6 +424,7 @@ int write_data_to_flash(uint32_t flash_offset, const uint8_t *data, uint core, u
     flash_range_program(flash_offset, data, length);
     restore_interrupts(ints);
     multicore_lockout_end_blocking();
+    reset_periodic_alarm();
     return 0;
 }
 
@@ -442,6 +438,8 @@ uint select_bankno(void)
         char s[20];
         sprintf(s,"Sel Bank: %02d", bankno);          
         write_str_with_spaces(0,4,s,16);
+        flash_layout *fl = (flash_layout *) flash_offset_address_bank(bankno-1);
+        write_str_with_spaces(0,5,fl->fld.magic_number == FLASH_MAGIC_NUMBER ? (char *)fl->fld.desc : "No Description",15);
         display_refresh();
         buttons_clear();
         for (;;)
@@ -473,6 +471,8 @@ int flash_load(void)
     uint bankno;
     int ret = 0;
     
+    last_gen_no = 0;
+    memset(desc,'\000',sizeof(desc));
     if ((bankno = select_bankno()) == 0) return -1;
     bankno--;
     flash_layout *fl = (flash_layout *) flash_offset_address_bank(bankno);
@@ -482,6 +482,7 @@ int flash_load(void)
         if (fl->fld.gen_no > last_gen_no)
             last_gen_no = fl->fld.gen_no;
         memcpy((void *)dsp_units, (void *) &fl->fld.dsp_units, sizeof(dsp_units));
+        memcpy(desc, fl->fld.desc, sizeof(desc));
     } else ret = -1;
    
     message_to_display(ret ? "Not Loaded" : "Loaded");
@@ -508,24 +509,40 @@ void flash_load_most_recent(void)
     {
         last_gen_no = newest_gen_no;
         memcpy((void *)dsp_units, (void *) &fln->fld.dsp_units, sizeof(dsp_units));
+        memcpy(desc, fln->fld.desc, sizeof(desc));
     }
 }
+
+ const uint8_t validchars[] = { ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
+                                'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7' ,'8', '9', '-', '/', '.', '!', '?' };
 
 void flash_save(void)
 {
     uint bankno;
     flash_layout *fl;
+    scroll_alpha_dat sad = { 0, 5, 16, sizeof(desc)-1, desc, validchars, sizeof(validchars), 0, 0, 0, 0, 0 };
 
     if ((bankno = select_bankno()) == 0) return;
     bankno--;
+    write_str_with_spaces(0,4,"Description:",15);
+    scroll_alpha_start(&sad);
+    for (;;)
+    {
+        buttons_poll();
+        scroll_alpha_key(&sad);
+        if (sad.exited) return;
+        if (sad.entered) break;
+    }    
     if ((fl = (flash_layout *)malloc(sizeof(flash_layout))) == NULL) return;    
     memset((void *)fl,'\000',sizeof(flash_layout));
     fl->fld.magic_number = FLASH_MAGIC_NUMBER;
     fl->fld.gen_no = (++last_gen_no);
+    memcpy(fl->fld.desc, desc, sizeof(fl->fld.desc));
     memcpy((void *)&fl->fld.dsp_units, (void *)dsp_units, sizeof(fl->fld.dsp_units));
     int ret = write_data_to_flash(flash_offset_bank(bankno), (uint8_t *) fl, 1, sizeof(flash_layout));
     free(fl);
 
+    write_str_with_spaces(0,4,"",15);
     message_to_display(ret ? "Save Failed" : "Save Succeeded");      
 }
 
@@ -569,13 +586,135 @@ void debugstuff(void)
         ssd1306_set_cursor(0,6);
         ssd1306_printstring(str);
         ssd1306_render();
-        test_all_control();
+        //test_all_control();
     }
 }
 
 const char * const mainmenu[] = { "Adjust", "Debug", "Load", "Save", NULL };
 
 menu_str mainmenu_str = { mainmenu, 0, 2, 15, 0, 0 };
+
+int test_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  char s[20];
+  tinycl_put_string("TEST=");
+  sprintf(s,"%d\r\n",counter,counter);
+  tinycl_put_string(s);
+  return 1;
+}
+
+int type_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  char s[40];
+  uint unit_no=tp[0].ti.i;
+  
+  dsp_unit_type dut = DSP_TYPE_NONE;
+  if (unit_no > 0)
+      dut = dsp_unit_get_type(unit_no-1);
+  sprintf(s,"%u %u ",unit_no, (uint)dut);
+  tinycl_put_string(s);
+  tinycl_put_string(dtnames[(uint)dut]);
+  tinycl_put_string("\r\n");
+  return 1;
+}
+
+int init_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  uint unit_no=tp[0].ti.i;
+  uint type_no=tp[1].ti.i;  
+  
+  if (unit_no > 0)
+    dsp_unit_initialize(unit_no-1, (dsp_unit_type) type_no);
+  return 1;
+}
+
+void conf_entry_print(const dsp_type_configuration_entry *dtce)
+{
+    char s[40];
+    tinycl_put_string(dtce->desc);
+    sprintf(s," %u %u\r\n",dtce->minval,dtce->maxval);
+    tinycl_put_string(s);
+}
+
+int conf_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  uint unit_no=tp[0].ti.i;
+  uint entry_no=tp[1].ti.i;
+ 
+  if (unit_no > 0)
+  {
+    if (entry_no == 0)
+    {
+        for (;;)
+        {
+                const dsp_type_configuration_entry *dtcen = dsp_unit_get_configuration_entry(unit_no-1, entry_no);
+                if (dtcen == NULL)
+                break;
+                conf_entry_print(dtcen);
+                entry_no++;
+        } 
+    } else
+    {
+        const dsp_type_configuration_entry *dtce = dsp_unit_get_configuration_entry(unit_no-1, entry_no-1);
+        if (dtce != NULL)
+        {
+                conf_entry_print(dtce);
+                return 1;
+        }
+    }
+  }
+  tinycl_put_string("NONE 0 0\r\n");
+  return 1;
+}
+
+int set_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  uint unit_no=tp[0].ti.i;
+  const char *parm = tp[1].ts.str;
+  uint value=tp[2].ti.i;
+
+  tinycl_put_string((unit_no > 0) && dsp_unit_set_value(unit_no-1, parm, value) ? "Set\r\n" : "Error\r\n");
+  return 1;
+}
+
+int get_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  uint unit_no=tp[0].ti.i;
+  const char *parm = tp[1].ts.str;
+  uint32_t value;
+    
+  if ((unit_no > 0) && dsp_unit_get_value(unit_no-1, parm, &value))
+  {
+      char s[40];
+      sprintf(s,"%u\r\n",value);
+      tinycl_put_string(s);
+  } else
+      tinycl_put_string("Error\r\n");
+  return 1;
+}
+
+int help_cmd(int args, tinycl_parameter *tp, void *v);
+
+const tinycl_command tcmds[] =
+{
+/*  { "SET", "Set Key Action", set_cmd, TINYCL_PARM_INT, TINYCL_PARM_INT, TINYCL_PARM_STR, TINYCL_PARM_END },
+  { "SHOW", "Show module configuration", show_cmd, TINYCL_PARM_INT, TINYCL_PARM_END },
+  { "INP", "Show Module Input State", inp_cmd, TINYCL_PARM_END },
+  { "WRITE", "Write Config Flash", write_cmd, TINYCL_PARM_END }, */
+  { "GET",  "Get configuration entry", get_cmd, TINYCL_PARM_INT, TINYCL_PARM_STR, TINYCL_PARM_END },
+  { "SET",  "Set configuration entry", set_cmd, TINYCL_PARM_INT, TINYCL_PARM_STR, TINYCL_PARM_INT, TINYCL_PARM_END },
+  { "CONF", "Get configuration list", conf_cmd, TINYCL_PARM_INT, TINYCL_PARM_INT, TINYCL_PARM_END },
+  { "INIT", "Set type of effect", init_cmd, TINYCL_PARM_INT, TINYCL_PARM_INT, TINYCL_PARM_END },
+  { "TYPE", "Get type of effect", type_cmd, TINYCL_PARM_INT, TINYCL_PARM_END },
+  { "TEST", "Test", test_cmd, TINYCL_PARM_INT, TINYCL_PARM_END },
+  { "HELP", "Display This Help", help_cmd, {TINYCL_PARM_END } }
+};
+
+int help_cmd(int args, tinycl_parameter *tp, void *v)
+{
+  tinycl_print_commands(sizeof(tcmds) / sizeof(tinycl_command), tcmds);
+  return 1;
+}
 
 int main()
 {
@@ -593,14 +732,18 @@ int main()
     ssd1306_set_cursor(0,0);
     for (;;)
     {
-        
-        ssd1306_Clear_Buffer();
-        ssd1306_set_cursor(0,0);
-        ssd1306_printstring("GuitarPico");
+        clear_display();
+        write_str(0,0,"GuitarPico");
+        write_str_with_spaces(0,1,(char *)desc,15);
         do_show_menu_item(&mainmenu_str);
         buttons_clear();
         for (;;)
         {
+            if (tinycl_task(sizeof(tcmds) / sizeof(tinycl_command), tcmds, NULL))
+            {
+                tinycl_do_echo = 1;
+                tinycl_put_string("> ");
+            }
             buttons_poll();
             uint val = do_menu(&mainmenu_str);
             if ((val == 2) || (val == 3)) break;

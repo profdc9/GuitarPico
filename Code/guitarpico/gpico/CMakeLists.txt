@@ -13,6 +13,7 @@ add_executable(gpico
     src/buttons.c
     src/dsp.c
     src/ui.c
+    src/tinycl.cpp
 )
 
 add_picovga(gpico)
