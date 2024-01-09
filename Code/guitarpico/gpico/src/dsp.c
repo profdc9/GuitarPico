@@ -1220,7 +1220,7 @@ int32_t dsp_process_all_units(int32_t sample)
 
 dsp_unit_type dsp_unit_get_type(uint dsp_unit_number)
 {
-    if (dsp_unit_number >= MAX_DSP_UNITS) return DSP_TYPE_NONE;
+    if (dsp_unit_number >= MAX_DSP_UNITS) return DSP_TYPE_MAX_ENTRY;
     dsp_unit *du = dsp_unit_entry(dsp_unit_number);
     return du->dtn.dut;
 }

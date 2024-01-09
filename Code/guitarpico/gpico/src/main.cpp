@@ -466,33 +466,37 @@ uint select_bankno(void)
     return bankno;
 }
 
-int flash_load(void)
+int flash_load_bank(uint bankno)
 {
-    uint bankno;
-    int ret = 0;
-    
-    last_gen_no = 0;
-    memset(desc,'\000',sizeof(desc));
-    if ((bankno = select_bankno()) == 0) return -1;
-    bankno--;
     flash_layout *fl = (flash_layout *) flash_offset_address_bank(bankno);
 
+    if (bankno >= FLASH_BANKS) return -1;
     if (fl->fld.magic_number == FLASH_MAGIC_NUMBER)
     {
         if (fl->fld.gen_no > last_gen_no)
             last_gen_no = fl->fld.gen_no;
         memcpy((void *)dsp_units, (void *) &fl->fld.dsp_units, sizeof(dsp_units));
         memcpy(desc, fl->fld.desc, sizeof(desc));
-    } else ret = -1;
-   
-    message_to_display(ret ? "Not Loaded" : "Loaded");
-    return ret;
+    } else return -1;
+    return 0;
+}
+
+int flash_load(void)
+{
+    uint bankno;
+    if ((bankno = select_bankno()) == 0) return -1;
+    message_to_display(flash_load_bank(bankno-1) ? "Not Loaded" : "Loaded");
+    return 0;
 }
 
 void flash_load_most_recent(void)
 {
     uint32_t newest_gen_no = 0;
-    flash_layout *fln = NULL;
+    uint load_bankno = FLASH_BANKS;
+
+    last_gen_no = 0;
+    memset(desc,'\000',sizeof(desc));
+
     for (uint bankno = 0;bankno < FLASH_BANKS; bankno++)
     {
         flash_layout *fl = (flash_layout *) flash_offset_address_bank(bankno);
@@ -501,29 +505,38 @@ void flash_load_most_recent(void)
             if (fl->fld.gen_no >= newest_gen_no)
             {
                 newest_gen_no = fl->fld.gen_no;
-                fln = fl;
+                load_bankno = bankno;
             }
         }
     }
-    if (fln != NULL)
-    {
-        last_gen_no = newest_gen_no;
-        memcpy((void *)dsp_units, (void *) &fln->fld.dsp_units, sizeof(dsp_units));
-        memcpy(desc, fln->fld.desc, sizeof(desc));
-    }
+    if (load_bankno < FLASH_BANKS) flash_load_bank(load_bankno);
 }
 
  const uint8_t validchars[] = { ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
                                 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7' ,'8', '9', '-', '/', '.', '!', '?' };
 
+int flash_save_bank(uint bankno)
+{
+    flash_layout *fl;
+
+    if (bankno >= FLASH_BANKS) return -1;
+    if ((fl = (flash_layout *)malloc(sizeof(flash_layout))) == NULL) return -1;
+    memset((void *)fl,'\000',sizeof(flash_layout));
+    fl->fld.magic_number = FLASH_MAGIC_NUMBER;
+    fl->fld.gen_no = (++last_gen_no);
+    memcpy(fl->fld.desc, desc, sizeof(fl->fld.desc));
+    memcpy((void *)&fl->fld.dsp_units, (void *)dsp_units, sizeof(fl->fld.dsp_units));
+    int ret = write_data_to_flash(flash_offset_bank(bankno), (uint8_t *) fl, 1, sizeof(flash_layout));
+    free(fl);
+    return ret;
+}
+
 void flash_save(void)
 {
     uint bankno;
-    flash_layout *fl;
-    scroll_alpha_dat sad = { 0, 5, 16, sizeof(desc)-1, desc, validchars, sizeof(validchars), 0, 0, 0, 0, 0 };
+    scroll_alpha_dat sad = { 0, 5, sizeof(desc)-1, sizeof(desc)-1, desc, validchars, sizeof(validchars), 0, 0, 0, 0, 0 };
 
     if ((bankno = select_bankno()) == 0) return;
-    bankno--;
     write_str_with_spaces(0,4,"Description:",15);
     scroll_alpha_start(&sad);
     for (;;)
@@ -533,17 +546,8 @@ void flash_save(void)
         if (sad.exited) return;
         if (sad.entered) break;
     }    
-    if ((fl = (flash_layout *)malloc(sizeof(flash_layout))) == NULL) return;    
-    memset((void *)fl,'\000',sizeof(flash_layout));
-    fl->fld.magic_number = FLASH_MAGIC_NUMBER;
-    fl->fld.gen_no = (++last_gen_no);
-    memcpy(fl->fld.desc, desc, sizeof(fl->fld.desc));
-    memcpy((void *)&fl->fld.dsp_units, (void *)dsp_units, sizeof(fl->fld.dsp_units));
-    int ret = write_data_to_flash(flash_offset_bank(bankno), (uint8_t *) fl, 1, sizeof(flash_layout));
-    free(fl);
-
     write_str_with_spaces(0,4,"",15);
-    message_to_display(ret ? "Save Failed" : "Save Succeeded");      
+    message_to_display(flash_save_bank(bankno-1) ? "Save Failed" : "Save Succeeded");      
 }
 
 void debugstuff(void)
@@ -603,18 +607,35 @@ int test_cmd(int args, tinycl_parameter* tp, void *v)
   return 1;
 }
 
-int type_cmd(int args, tinycl_parameter* tp, void *v)
+void type_cmd_write(uint unit_no, dsp_unit_type dut)
 {
   char s[40];
-  uint unit_no=tp[0].ti.i;
-  
-  dsp_unit_type dut = DSP_TYPE_NONE;
-  if (unit_no > 0)
-      dut = dsp_unit_get_type(unit_no-1);
-  sprintf(s,"%u %u ",unit_no, (uint)dut);
+  if (dut >= DSP_TYPE_MAX_ENTRY) return;
+  sprintf(s,"TYPE %u %u ",unit_no+1, (uint)dut);
   tinycl_put_string(s);
   tinycl_put_string(dtnames[(uint)dut]);
-  tinycl_put_string("\r\n");
+  tinycl_put_string("\r\n");    
+}
+
+int type_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  uint unit_no=tp[0].ti.i;
+  dsp_unit_type dut = DSP_TYPE_NONE;
+  
+  if (unit_no == 0)
+  {
+      do
+      {
+          dut = dsp_unit_get_type(unit_no);
+          type_cmd_write(unit_no, dut);
+          unit_no++;
+      } while (dut < DSP_TYPE_MAX_ENTRY);
+      return 1;
+  }
+  unit_no--;
+  dut = dsp_unit_get_type(unit_no);
+  if (dut < DSP_TYPE_MAX_ENTRY)
+      type_cmd_write(unit_no, dut);
   return 1;
 }
 
@@ -628,13 +649,25 @@ int init_cmd(int args, tinycl_parameter* tp, void *v)
   return 1;
 }
 
-void conf_entry_print(const dsp_type_configuration_entry *dtce)
+void conf_entry_print(uint unit_no, const dsp_type_configuration_entry *dtce)
 {
-    char s[40];
+    uint32_t value;
+    char s[60];
+    sprintf(s,"SET %u ",unit_no+1);
+    tinycl_put_string(s);    
     tinycl_put_string(dtce->desc);
-    sprintf(s," %u %u\r\n",dtce->minval,dtce->maxval);
+    if (!dsp_unit_get_value(unit_no, dtce->desc, &value)) value = 0;
+    sprintf(s," %u %u %u\r\n",value,dtce->minval,dtce->maxval);
     tinycl_put_string(s);
 }
+
+ const dsp_type_configuration_entry *conf_entry_lookup_print(uint unit_no, uint entry_no)
+ {
+    const dsp_type_configuration_entry *dtce = dsp_unit_get_configuration_entry(unit_no, entry_no);
+    if (dtce == NULL) return NULL;
+    conf_entry_print(unit_no, dtce);
+    return dtce;
+ }
 
 int conf_cmd(int args, tinycl_parameter* tp, void *v)
 {
@@ -643,27 +676,27 @@ int conf_cmd(int args, tinycl_parameter* tp, void *v)
  
   if (unit_no > 0)
   {
+    unit_no--;
     if (entry_no == 0)
     {
-        for (;;)
-        {
-                const dsp_type_configuration_entry *dtcen = dsp_unit_get_configuration_entry(unit_no-1, entry_no);
-                if (dtcen == NULL)
-                break;
-                conf_entry_print(dtcen);
-                entry_no++;
-        } 
+        dsp_unit_type dut = dsp_unit_get_type(unit_no);
+        type_cmd_write(unit_no, dut);    
+        while (conf_entry_lookup_print(unit_no, entry_no) != NULL) entry_no++;
     } else
+        conf_entry_lookup_print(unit_no, entry_no-1);
+  } else
+  {
+    for (;;)
     {
-        const dsp_type_configuration_entry *dtce = dsp_unit_get_configuration_entry(unit_no-1, entry_no-1);
-        if (dtce != NULL)
-        {
-                conf_entry_print(dtce);
-                return 1;
-        }
+       dsp_unit_type dut = dsp_unit_get_type(unit_no);
+       if (dut >= DSP_TYPE_MAX_ENTRY) break;
+       type_cmd_write(unit_no, dut);    
+       entry_no = 0;
+       while (conf_entry_lookup_print(unit_no, entry_no) != NULL) entry_no++;
+       unit_no++;
     }
   }
-  tinycl_put_string("NONE 0 0\r\n");
+  tinycl_put_string("END 0 END\r\n");
   return 1;
 }
 
@@ -693,14 +726,71 @@ int get_cmd(int args, tinycl_parameter* tp, void *v)
   return 1;
 }
 
+int save_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  uint bankno=tp[0].ti.i;
+ 
+  tinycl_put_string((bankno == 0) || flash_save_bank(bankno-1) ? "Not Saved\r\n" : "Saved\r\n");
+  return 1;
+}
+
+int load_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  uint bankno=tp[0].ti.i;
+ 
+  tinycl_put_string((bankno == 0) || flash_load_bank(bankno-1) ? "Not Loaded\r\n" : "Loaded\r\n");
+  return 1;
+}
+
+void copyspaces(char *c, const char *d, int n)
+{
+    while ((n>0) && (*d != '\000'))
+    {
+        for (uint i=0;i<(sizeof(validchars)/sizeof(validchars[0]));i++)
+            if (((uint8_t) *d) == validchars[i])
+            {
+                *c++ = *d;
+                n--;
+                break;
+            }
+        d++; 
+    }
+    while (n>0)
+    {
+        *c++ = ' ';
+        n--;
+    }
+    *c = '\000';
+}
+
+int setdesc_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  const char *parm = tp[0].ts.str;
+  
+  copyspaces((char *)desc,parm,sizeof(desc)-1);
+ 
+  tinycl_put_string("Description: '");
+  tinycl_put_string((const char *)desc);
+  tinycl_put_string("'\r\n");
+  return 1;
+}
+
+int getdesc_cmd(int args, tinycl_parameter* tp, void *v)
+{
+  tinycl_put_string("Description: '");
+  tinycl_put_string((const char *)desc);
+  tinycl_put_string("'\r\n");
+  return 1;
+}
+
 int help_cmd(int args, tinycl_parameter *tp, void *v);
 
 const tinycl_command tcmds[] =
 {
-/*  { "SET", "Set Key Action", set_cmd, TINYCL_PARM_INT, TINYCL_PARM_INT, TINYCL_PARM_STR, TINYCL_PARM_END },
-  { "SHOW", "Show module configuration", show_cmd, TINYCL_PARM_INT, TINYCL_PARM_END },
-  { "INP", "Show Module Input State", inp_cmd, TINYCL_PARM_END },
-  { "WRITE", "Write Config Flash", write_cmd, TINYCL_PARM_END }, */
+  { "GETDESC", "Get description", getdesc_cmd, TINYCL_PARM_END },
+  { "SETDESC", "Set description", setdesc_cmd, TINYCL_PARM_STR, TINYCL_PARM_END },
+  { "LOAD", "Load configuration", load_cmd, TINYCL_PARM_INT, TINYCL_PARM_END },
+  { "SAVE", "Save configuration", save_cmd, TINYCL_PARM_INT, TINYCL_PARM_END },
   { "GET",  "Get configuration entry", get_cmd, TINYCL_PARM_INT, TINYCL_PARM_STR, TINYCL_PARM_END },
   { "SET",  "Set configuration entry", set_cmd, TINYCL_PARM_INT, TINYCL_PARM_STR, TINYCL_PARM_INT, TINYCL_PARM_END },
   { "CONF", "Get configuration list", conf_cmd, TINYCL_PARM_INT, TINYCL_PARM_INT, TINYCL_PARM_END },
