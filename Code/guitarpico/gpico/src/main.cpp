@@ -291,7 +291,10 @@ void adjust_parms(uint8_t unit_no)
                 if (res == 3)
                 {
                     if (mst.item != dsp_units[unit_no].dtn.dut)
+                    {
                         dsp_unit_initialize(unit_no, (dsp_unit_type)mst.item);
+                        dsp_unit_reset_all();
+                    }
                 }
             } else
             {
@@ -367,7 +370,7 @@ int main2();
 #define FLASH_PAGE_BYTES 4096u
 #define FLASH_OFFSET_STORED (2*1024*1024)
 #define FLASH_BASE_ADR 0x10000000
-#define FLASH_MAGIC_NUMBER 0xFEEDBA1E
+#define FLASH_MAGIC_NUMBER 0xFEEDBEEF
 
 #define FLASH_PAGES(x) ((((x)+(FLASH_PAGE_BYTES-1))/FLASH_PAGE_BYTES)*FLASH_PAGE_BYTES)
 
@@ -645,7 +648,10 @@ int init_cmd(int args, tinycl_parameter* tp, void *v)
   uint type_no=tp[1].ti.i;  
   
   if (unit_no > 0)
+  {
     dsp_unit_initialize(unit_no-1, (dsp_unit_type) type_no);
+    dsp_unit_reset_all();
+  }
   return 1;
 }
 

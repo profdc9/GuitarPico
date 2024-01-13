@@ -461,6 +461,9 @@ extern const char * const dtnames[];
 uint32_t dsp_read_value_prec(void *v, int prec);
 void dsp_set_value_prec(void *v, int prec, uint32_t val);
 
+void dsp_unit_reset(int dsp_unit_number);
+void dsp_unit_reset_all(void);
+
 #ifdef __cplusplus
 }
 #endif

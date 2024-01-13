@@ -917,7 +917,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_flange[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_flange dsp_type_flange_default = { 0, 0, 0, 0, 70, 96, 0, 128, 0, 128, 0, 0, 0, 0 };
+const dsp_type_flange dsp_type_flange_default = { 0, 0, 0, 0, 70, 96, 0,  255, 0, 128, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_PHASER*************************************/
 
@@ -955,8 +955,8 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
         du->dtphaser.a_filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
         du->dtphaser.a_filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
 
-        w1 = nyquist_fraction_omega(du->dtphaser.freq1*3/2);
-        w2 = nyquist_fraction_omega(du->dtphaser.freq2*3/2);
+        w1 = nyquist_fraction_omega(du->dtphaser.freq1);
+        w2 = nyquist_fraction_omega(du->dtphaser.freq2);
         if (w1 > w2)
         {
             float temp = w1;
@@ -979,6 +979,8 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
                + ((int32_t)du->dtphaser.a_sampledly2) * float_to_sampled_int(1.0f);
                
     filtout = fractional_int_remove_offset(filtout);
+    //if (filtout > (ADC_PREC_VALUE/2-1)) filtout=(filtout+ADC_PREC_VALUE/2-1)/2;
+    //if (filtout < (-ADC_PREC_VALUE/2)) filtout=(filtout-ADC_PREC_VALUE/2)/2;
     du->dtphaser.a_sampledly2 = du->dtphaser.a_sampledly1;
     du->dtphaser.a_sampledly1 = sample;
     du->dtphaser.a_filtdly2 = du->dtphaser.a_filtdly1;
@@ -992,6 +994,8 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
                + ((int32_t)du->dtphaser.b_sampledly2) * float_to_sampled_int(1.0f);
 
     filtout2 = fractional_int_remove_offset(filtout2);
+    //if (filtout2 > (ADC_PREC_VALUE/2-1)) filtout2=(filtout2+ADC_PREC_VALUE/2-1)/2;
+    //if (filtout2 < (-ADC_PREC_VALUE/2)) filtout2=(filtout2-ADC_PREC_VALUE/2)/2;
     du->dtphaser.b_sampledly2 = du->dtphaser.b_sampledly1;
     du->dtphaser.b_sampledly1 = filtout;
     du->dtphaser.b_filtdly2 = du->dtphaser.b_filtdly1;
@@ -1004,8 +1008,8 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
 
 const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] = 
 {
-    { "Freq1",        offsetof(dsp_type_phaser,freq1),           2, 4, 100, 4000 },
-    { "Freq2",        offsetof(dsp_type_phaser,freq2),           2, 4, 100, 4000 },
+    { "Freq1",        offsetof(dsp_type_phaser,freq1),           2, 4, 100, 2000 },
+    { "Freq2",        offsetof(dsp_type_phaser,freq2),           2, 4, 100, 2000 },
     { "Q",            offsetof(dsp_type_phaser,Q),               2, 3, 50, 999 },
     { "Speed",        offsetof(dsp_type_phaser,frequency),       4, 4, 1, 4095 },
     { "Mixval",       offsetof(dsp_type_phaser,mixval),          4, 3, 0, 255 },
@@ -1014,7 +1018,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_phaser dsp_type_phaser_default = { 0, 0, 200, 800, 200, 60, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  } ;
+const dsp_type_phaser dsp_type_phaser_default = { 0, 0, 200, 800, 400, 60, 192, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  } ;
 
 /************************************DSP_TYPE_BACKWARDS*********************************/
 
@@ -1074,7 +1078,7 @@ const char * const dtnames[] =
     "Distortion",
     "Overdrive",
     "Ring",
-    "Flange",
+    "Flanger",
     "Phaser",
     "Backwards",
     "Sin Synth",
@@ -1192,6 +1196,31 @@ void dsp_unit_initialize(int dsp_unit_number, dsp_unit_type dut)
     memcpy((void *)du, dsp_unit_struct_defaults[dut], sizeof(dsp_unit));
     du->dtn.dut = dut;
     du->dtn.source_unit = dsp_unit_number + 1;
+}
+
+void dsp_unit_reset(int dsp_unit_number)
+{
+    dsp_unit *du = dsp_unit_entry(dsp_unit_number);
+    
+    dsp_unit temp = *du;
+    dsp_unit_struct_zero(du);
+    memcpy((void *)du, dsp_unit_struct_defaults[temp.dtn.dut], sizeof(dsp_unit));
+    du->dtn.dut = temp.dtn.dut;
+    du->dtn.source_unit = temp.dtn.source_unit;
+    const dsp_type_configuration_entry *dtce_l = dtce[temp.dtn.dut];
+    while (dtce_l->desc != NULL)
+    {
+       
+       uint32_t value = dsp_read_value_prec((void *)(((uint8_t *)&temp) + dtce_l->offset), dtce_l->size);
+       dsp_set_value_prec((void *)(((uint8_t *)du) + dtce_l->offset), dtce_l->size, value); 
+       dtce_l++;
+    }
+}
+
+void dsp_unit_reset_all(void)
+{
+    for (int i=0;i<MAX_DSP_UNITS;i++)
+        dsp_unit_reset(i);
 }
 
 static inline int32_t dsp_process(int32_t sample, dsp_unit *du)
