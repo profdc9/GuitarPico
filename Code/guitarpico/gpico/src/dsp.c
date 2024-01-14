@@ -900,7 +900,7 @@ int32_t dsp_type_process_flange(int32_t sample, dsp_unit *du)
     int32_t sine_val = sine_table_entry((du->dtflng.sine_counter & 0xFFFF00) / 4096);
     int32_t mod_val = ((sine_val * du->dtflng.modulation) + QUANTIZATION_MAX * 256) / 512;
     uint32_t delay_samples = (du->dtflng.delay_samples * mod_val) / QUANTIZATION_MAX;
-    sample = (sample_circ_buf_clean_value(delay_samples) * ((int32_t)du->dtflng.mixval) + sample * ((int32_t)(255 - du->dtflng.mixval))) / 256;
+    sample = (sample_circ_buf_value(delay_samples) * ((int32_t)du->dtflng.feedback) + sample * ((int32_t)(255 - du->dtflng.feedback))) / 256;
     return sample;
 
 }
@@ -910,14 +910,58 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_flange[] =
     { "Speed",        offsetof(dsp_type_flange,frequency),       4, 3, 1, 4095 },
     { "Modulation",   offsetof(dsp_type_flange,modulation),      4, 3, 0, 255 },
     { "Samples",      offsetof(dsp_type_flange,delay_samples),   4, 5, 1, SAMPLE_CIRC_BUF_SIZE },
-    { "Mixval",       offsetof(dsp_type_flange,mixval),          4, 3, 0, 255 },
+    { "Feedback",     offsetof(dsp_type_flange,feedback),        4, 3, 0, 255 },
     { "SpeedCntrl",   offsetof(dsp_type_flange,control_number1), 4, 1, 0, 6 },
     { "ModCntrl",     offsetof(dsp_type_flange,control_number2), 4, 1, 0, 6 },
     { "SourceUnit",   offsetof(dsp_type_flange,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_flange dsp_type_flange_default = { 0, 0, 0, 0, 70, 96, 0,  255, 0, 128, 0, 0, 0, 0 };
+const dsp_type_flange dsp_type_flange_default = { 0, 0, 0, 0, 70, 32, 0,  255, 0, 128, 0, 0, 0, 0 };
+
+/************************************DSP_TYPE_CHORUS*************************************/
+
+int32_t dsp_type_process_chorus(int32_t sample, dsp_unit *du)
+{
+    uint32_t new_input = read_potentiometer_value(du->dtchor.control_number1);
+    if (abs(new_input - du->dtchor.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtchor.pot_value1 = new_input;
+        du->dtchor.frequency = 1 + new_input/(POT_MAX_VALUE/256);
+    }
+    new_input = read_potentiometer_value(du->dtchor.control_number2);
+    if (abs(new_input - du->dtchor.pot_value2) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtchor.pot_value2 = new_input;
+        du->dtchor.modulation = (du->dtchor.pot_value2 * 256) / POT_MAX_VALUE;
+    }
+    if (du->dtchor.frequency != du->dtchor.last_frequency)
+    {
+        du->dtchor.last_frequency = du->dtchor.frequency;
+        du->dtchor.sine_counter_inc = du->dtchor.frequency; // (du->dtchor.frequency * 65536) / GUITARPICO_SAMPLERATE;
+    }
+    du->dtchor.sine_counter += du->dtchor.sine_counter_inc;
+    int32_t sine_val = sine_table_entry((du->dtchor.sine_counter & 0xFFFF00) / 4096);
+    int32_t mod_val = ((sine_val * du->dtchor.modulation) + QUANTIZATION_MAX * 256) / 512;
+    uint32_t delay_samples = (du->dtchor.delay_samples * mod_val) / QUANTIZATION_MAX;
+    sample = (sample_circ_buf_clean_value(delay_samples) * ((int32_t)du->dtchor.mixval) + sample * ((int32_t)(255 - du->dtchor.mixval))) / 256;
+    return sample;
+
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_chorus[] = 
+{
+    { "Speed",        offsetof(dsp_type_chorus,frequency),       4, 3, 1, 4095 },
+    { "Modulation",   offsetof(dsp_type_chorus,modulation),      4, 3, 0, 255 },
+    { "Samples",      offsetof(dsp_type_chorus,delay_samples),   4, 5, 1, SAMPLE_CIRC_BUF_SIZE },
+    { "Mixval",       offsetof(dsp_type_chorus,mixval),          4, 3, 0, 255 },
+    { "SpeedCntrl",   offsetof(dsp_type_chorus,control_number1), 4, 1, 0, 6 },
+    { "ModCntrl",     offsetof(dsp_type_chorus,control_number2), 4, 1, 0, 6 },
+    { "SourceUnit",   offsetof(dsp_type_chorus,source_unit),     4, 2, 1, MAX_DSP_UNITS },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_chorus dsp_type_chorus_default = { 0, 0, 0, 0, 70, 96, 0,  255, 0, 128, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_PHASER*************************************/
 
@@ -991,7 +1035,27 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_phaser dsp_type_phaser_default = { 0, 0, 300, 600, 200, 60, 128, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  } ;
+    dsp_unit_type  dut;
+    uint32_t source_unit;
+    uint16_t freq1, freq2;
+    uint16_t Q;
+    uint32_t frequency;
+    uint32_t mixval;
+    uint32_t stages;
+    uint32_t last_frequency;
+    uint16_t last_freq1, last_freq2;
+    uint16_t last_Q;
+    int32_t filta1_interp1;
+    int32_t filta1_interp2;
+    int32_t filta1;
+    int32_t filta2;
+    uint32_t sine_counter;
+    uint32_t sine_counter_inc;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+
+const dsp_type_phaser dsp_type_phaser_default = { 0, 0, 300, 600, 200, 60, 128, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+{ 0, 0, 0, 0, 0, 0, 0, 0 },      { 0, 0, 0, 0, 0, 0, 0, 0 },     { 0, 0, 0, 0, 0, 0, 0, 0 },     { 0, 0, 0, 0, 0, 0, 0, 0 } };
 
 /************************************DSP_TYPE_BACKWARDS*********************************/
 
@@ -1052,6 +1116,7 @@ const char * const dtnames[] =
     "Overdrive",
     "Ring",
     "Flanger",
+    "Chorus",
     "Phaser",
     "Backwards",
     "Sin Synth",
@@ -1078,6 +1143,7 @@ const dsp_type_configuration_entry * const dtce[] =
     dsp_type_configuration_entry_overdrive, 
     dsp_type_configuration_entry_ring, 
     dsp_type_configuration_entry_flange, 
+    dsp_type_configuration_entry_chorus, 
     dsp_type_configuration_entry_phaser, 
     dsp_type_configuration_entry_backwards, 
     dsp_type_configuration_entry_sin_synth, 
@@ -1103,6 +1169,7 @@ dsp_type_process * const dtp[] = {
     dsp_type_process_overdrive,
     dsp_type_process_ring,
     dsp_type_process_flange,
+    dsp_type_process_chorus,
     dsp_type_process_phaser,
     dsp_type_process_backwards,
     dsp_type_process_sin_synth,
@@ -1128,6 +1195,7 @@ const void * const dsp_unit_struct_defaults[] =
     (void *) &dsp_type_overdrive_default,
     (void *) &dsp_type_ring_default,
     (void *) &dsp_type_flange_default,
+    (void *) &dsp_type_chorus_default,
     (void *) &dsp_type_phaser_default,
     (void *) &dsp_type_backwards_default,
     (void *) &dsp_type_sine_synth_default

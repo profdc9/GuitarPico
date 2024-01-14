@@ -353,12 +353,30 @@ typedef struct
     uint32_t last_frequency;
     uint32_t modulation;
     uint32_t last_modulation;
-    uint32_t mixval;
+    uint32_t feedback;
     uint32_t control_number1;
     uint32_t pot_value1;
     uint32_t control_number2;
     uint32_t pot_value2;
 } dsp_type_flange;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    uint32_t source_unit;
+    uint32_t sine_counter;
+    uint32_t sine_counter_inc;
+    uint32_t delay_samples;
+    uint32_t frequency;
+    uint32_t last_frequency;
+    uint32_t modulation;
+    uint32_t last_modulation;
+    uint32_t mixval;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+    uint32_t control_number2;
+    uint32_t pot_value2;
+} dsp_type_chorus;
 
 #define PHASER_STAGES 8
 
@@ -378,11 +396,11 @@ typedef struct
     int32_t filta1_interp2;
     int32_t filta1;
     int32_t filta2;
-    int32_t sampledly1[PHASER_STAGES], sampledly2[PHASER_STAGES], filtdly1[PHASER_STAGES], filtdly2[PHASER_STAGES];
     uint32_t sine_counter;
     uint32_t sine_counter_inc;
     uint32_t control_number1;
     uint32_t pot_value1;
+    int32_t sampledly1[PHASER_STAGES], sampledly2[PHASER_STAGES], filtdly1[PHASER_STAGES], filtdly2[PHASER_STAGES];
 } dsp_type_phaser;
 
 typedef struct
@@ -419,6 +437,7 @@ typedef union
     dsp_type_overdrive    dtovr;
     dsp_type_ring         dtring;
     dsp_type_flange       dtflng;
+    dsp_type_chorus       dtchor;
     dsp_type_phaser       dtphaser;
     dsp_type_backwards    dtback;
 } dsp_unit;
