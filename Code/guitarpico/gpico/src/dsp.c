@@ -923,7 +923,6 @@ const dsp_type_flange dsp_type_flange_default = { 0, 0, 0, 0, 70, 96, 0,  255, 0
 
 int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
 {
-    int32_t filtout, filtout2;
     uint32_t new_input = read_potentiometer_value(du->dtphaser.control_number1);
     if (abs(new_input - du->dtphaser.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
     {
@@ -951,59 +950,32 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
         }
         float a = float_a_value(w1, du->dtphaser.Q);
         float bfpa0 = 1.0f/(1.0f+a);
-        du->dtphaser.a_filta1_interp1 = du->dtphaser.a_filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
-        du->dtphaser.a_filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
-        du->dtphaser.a_filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
-
-        w1 = nyquist_fraction_omega(du->dtphaser.freq1);
-        w2 = nyquist_fraction_omega(du->dtphaser.freq2);
-        if (w1 > w2)
-        {
-            float temp = w1;
-            w1 = w2;
-            w2 = temp;
-        }
-        a = float_a_value(w1, du->dtphaser.Q);
-        bfpa0 = 1.0f/(1.0f+a);
-        du->dtphaser.b_filta1_interp1 = du->dtphaser.b_filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
-        du->dtphaser.b_filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
-        du->dtphaser.b_filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
+        du->dtphaser.filta1_interp1 = du->dtphaser.filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
+        du->dtphaser.filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
+        du->dtphaser.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
+    
     du->dtphaser.sine_counter += du->dtphaser.sine_counter_inc;
     int32_t sine_val = QUANTIZATION_MAX - 1 - abs(sine_table_entry((du->dtphaser.sine_counter & 0xFFFF0) / 4096));
-    du->dtphaser.a_filta1 = du->dtphaser.a_filta1_interp1 + ((du->dtphaser.a_filta1_interp2 - du->dtphaser.a_filta1_interp1) * 
+    du->dtphaser.filta1 = du->dtphaser.filta1_interp1 + ((du->dtphaser.filta1_interp2 - du->dtphaser.filta1_interp1) * 
                             sine_val) / QUANTIZATION_MAX;
 
-    filtout =    ((int32_t)du->dtphaser.a_filta2) * (((int32_t)sample) - ((int32_t)du->dtphaser.a_filtdly2))
-               + ((int32_t)du->dtphaser.a_filta1) * (((int32_t)du->dtphaser.a_sampledly1) - ((int32_t)du->dtphaser.a_filtdly1))
-               + ((int32_t)du->dtphaser.a_sampledly2) * float_to_sampled_int(1.0f);
+    int32_t filtout = sample;
+    for (uint stage=0;stage<du->dtphaser.stages;stage++)
+    {
+        int32_t last_filtout = filtout;
+        filtout =     ((int32_t)du->dtphaser.filta2) * (((int32_t)last_filtout) - ((int32_t)du->dtphaser.filtdly2[stage]))
+                            + ((int32_t)du->dtphaser.filta1) * (((int32_t)du->dtphaser.sampledly1[stage]) - ((int32_t)du->dtphaser.filtdly1[stage]))
+                            + ((int32_t)du->dtphaser.sampledly2[stage]) * float_to_sampled_int(1.0f);
                
-    filtout = fractional_int_remove_offset(filtout);
-    //if (filtout > (ADC_PREC_VALUE/2-1)) filtout=(filtout+ADC_PREC_VALUE/2-1)/2;
-    //if (filtout < (-ADC_PREC_VALUE/2)) filtout=(filtout-ADC_PREC_VALUE/2)/2;
-    du->dtphaser.a_sampledly2 = du->dtphaser.a_sampledly1;
-    du->dtphaser.a_sampledly1 = sample;
-    du->dtphaser.a_filtdly2 = du->dtphaser.a_filtdly1;
-    du->dtphaser.a_filtdly1 = filtout;
-
-    du->dtphaser.b_filta1 = du->dtphaser.b_filta1_interp1 + ((du->dtphaser.b_filta1_interp2 - du->dtphaser.b_filta1_interp1) * 
-                            sine_val) / QUANTIZATION_MAX;
-
-    filtout2 =   ((int32_t)du->dtphaser.b_filta2) * (((int32_t)filtout) - ((int32_t)du->dtphaser.b_filtdly2))
-               + ((int32_t)du->dtphaser.b_filta1) * (((int32_t)du->dtphaser.b_sampledly1) - ((int32_t)du->dtphaser.b_filtdly1))
-               + ((int32_t)du->dtphaser.b_sampledly2) * float_to_sampled_int(1.0f);
-
-    filtout2 = fractional_int_remove_offset(filtout2);
-    //if (filtout2 > (ADC_PREC_VALUE/2-1)) filtout2=(filtout2+ADC_PREC_VALUE/2-1)/2;
-    //if (filtout2 < (-ADC_PREC_VALUE/2)) filtout2=(filtout2-ADC_PREC_VALUE/2)/2;
-    du->dtphaser.b_sampledly2 = du->dtphaser.b_sampledly1;
-    du->dtphaser.b_sampledly1 = filtout;
-    du->dtphaser.b_filtdly2 = du->dtphaser.b_filtdly1;
-    du->dtphaser.b_filtdly1 = filtout2;
-
-    filtout2 = (filtout2 * ((int32_t)du->dtphaser.mixval) + sample * ((int32_t)(255 - du->dtphaser.mixval))) / 256;
-
-    return filtout2;
+        filtout = fractional_int_remove_offset(filtout);
+        du->dtphaser.sampledly2[stage] = du->dtphaser.sampledly1[stage];
+        du->dtphaser.sampledly1[stage] = last_filtout;
+        du->dtphaser.filtdly2[stage] = du->dtphaser.filtdly1[stage];
+        du->dtphaser.filtdly1[stage] = filtout;
+    }
+    filtout = (filtout * ((int32_t)du->dtphaser.mixval) + sample * ((int32_t)(255 - du->dtphaser.mixval))) / 256;
+    return filtout;
 }
 
 const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] = 
@@ -1012,13 +984,14 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] =
     { "Freq2",        offsetof(dsp_type_phaser,freq2),           2, 4, 100, 2000 },
     { "Q",            offsetof(dsp_type_phaser,Q),               2, 3, 50, 999 },
     { "Speed",        offsetof(dsp_type_phaser,frequency),       4, 4, 1, 4095 },
+    { "Stages",       offsetof(dsp_type_phaser,stages),          4, 1, 2, PHASER_STAGES },
     { "Mixval",       offsetof(dsp_type_phaser,mixval),          4, 3, 0, 255 },
     { "SpeedCntrl",   offsetof(dsp_type_phaser,control_number1), 4, 1, 0, 6 },
     { "SourceUnit",   offsetof(dsp_type_phaser,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_phaser dsp_type_phaser_default = { 0, 0, 200, 800, 400, 60, 192, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  } ;
+const dsp_type_phaser dsp_type_phaser_default = { 0, 0, 300, 600, 200, 60, 128, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  } ;
 
 /************************************DSP_TYPE_BACKWARDS*********************************/
 

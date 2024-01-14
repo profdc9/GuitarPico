@@ -360,6 +360,8 @@ typedef struct
     uint32_t pot_value2;
 } dsp_type_flange;
 
+#define PHASER_STAGES 8
+
 typedef struct
 {
     dsp_unit_type  dut;
@@ -368,19 +370,15 @@ typedef struct
     uint16_t Q;
     uint32_t frequency;
     uint32_t mixval;
+    uint32_t stages;
     uint32_t last_frequency;
     uint16_t last_freq1, last_freq2;
     uint16_t last_Q;
-    int32_t a_filta1_interp1;
-    int32_t a_filta1_interp2;
-    int32_t a_filta1;
-    int32_t a_filta2;
-    int32_t a_sampledly1, a_sampledly2, a_filtdly1, a_filtdly2;
-    int32_t b_filta1_interp1;
-    int32_t b_filta1_interp2;
-    int32_t b_filta1;
-    int32_t b_filta2;
-    int32_t b_sampledly1, b_sampledly2, b_filtdly1, b_filtdly2;
+    int32_t filta1_interp1;
+    int32_t filta1_interp2;
+    int32_t filta1;
+    int32_t filta2;
+    int32_t sampledly1[PHASER_STAGES], sampledly2[PHASER_STAGES], filtdly1[PHASER_STAGES], filtdly2[PHASER_STAGES];
     uint32_t sine_counter;
     uint32_t sine_counter_inc;
     uint32_t control_number1;
