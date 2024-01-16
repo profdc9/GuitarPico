@@ -71,9 +71,12 @@ typedef enum
     DSP_TYPE_DISTORTION,
     DSP_TYPE_OVERDRIVE,
     DSP_TYPE_RING,
-    DSP_TYPE_FLANGE,
+    DSP_TYPE_FLANGER,
+    DSP_TYPE_CHORUS,
     DSP_TYPE_PHASER,
     DSP_TYPE_BACKWARDS,
+    DSP_TYPE_PITCHSHIFT,
+    DSP_TYPE_OCTAVE,
     DSP_TYPE_SINE_SYNTH,
     DSP_TYPE_MAX_ENTRY
 } dsp_unit_type;
@@ -416,6 +419,51 @@ typedef struct
     uint32_t pot_value2;
 } dsp_type_backwards;
 
+typedef struct
+{
+    dsp_unit_type  dut;
+    uint32_t source_unit;
+    uint32_t pitchshift_samples;
+    uint32_t pitchshift_rate;
+    uint32_t balance;
+    uint32_t frequency;
+    uint32_t Q;
+    int32_t  samples_count;
+    uint32_t samples_inc;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+    uint32_t control_number2;
+    uint32_t pot_value2;
+    uint32_t control_number3;
+    uint32_t pot_value3;
+
+    uint32_t pitchshift_samples_2;
+    uint32_t pitchshift_samples_low_thr;
+    uint32_t pitchshift_samples_high_thr;
+    uint32_t last_pitchshift_samples;
+    uint32_t sample_avg;
+    int32_t  last_sample;
+    uint32_t last_frequency;
+    uint32_t last_Q;
+
+    int32_t filtb0;
+    int32_t filtb1;
+    int32_t filta1;
+    int32_t filta2;
+    int32_t sampledly1, sampledly2, filtdly1, filtdly2;
+
+} dsp_type_pitchshift;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    uint32_t source_unit;
+    uint32_t rectify;
+    uint32_t multiplier;
+    int32_t  sample_avg;
+    int32_t  sample_avg2;
+} dsp_type_octave;
+
 typedef union 
 {
     dsp_type_none         dtn;
@@ -440,6 +488,8 @@ typedef union
     dsp_type_chorus       dtchor;
     dsp_type_phaser       dtphaser;
     dsp_type_backwards    dtback;
+    dsp_type_pitchshift   dtpitch;
+    dsp_type_octave       dtoct;
 } dsp_unit;
 
 typedef bool    (dsp_type_initialize)(void *initialization_data, dsp_unit *du);

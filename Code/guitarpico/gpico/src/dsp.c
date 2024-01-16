@@ -961,7 +961,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_chorus[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_chorus dsp_type_chorus_default = { 0, 0, 0, 0, 70, 96, 0,  255, 0, 128, 0, 0, 0, 0 };
+const dsp_type_chorus dsp_type_chorus_default = { 0, 0, 0, 0, 170, 32, 0,  128, 0, 200, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_PHASER*************************************/
 
@@ -1093,6 +1093,139 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_backwards[] =
 
 const dsp_type_backwards dsp_type_backwards_default = { 0, 0, 2000, 255, 0, 0, 0, 0, 0 };
 
+/************************************DSP_TYPE_PITCHSHIFT*********************************/
+
+int32_t dsp_type_process_pitchshift(int32_t sample, dsp_unit *du)
+{
+    uint32_t new_input = read_potentiometer_value(du->dtpitch.control_number1);
+    if (abs(new_input - du->dtpitch.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtpitch.pot_value1 = new_input;
+        du->dtpitch.pitchshift_samples = (du->dtpitch.pot_value1 * SAMPLE_CIRC_BUF_SIZE) / POT_MAX_VALUE;
+    }
+    new_input = read_potentiometer_value(du->dtpitch.control_number2);
+    if (abs(new_input - du->dtpitch.pot_value2) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtpitch.pot_value2 = new_input;
+        du->dtpitch.balance = (du->dtpitch.pot_value2 * 256) / POT_MAX_VALUE;
+    }
+    new_input = read_potentiometer_value(du->dtpitch.control_number3);
+    if (abs(new_input - du->dtpitch.pot_value3) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtpitch.pot_value3 = new_input;
+        du->dtpitch.pitchshift_rate = (du->dtpitch.pot_value3 * 16384) / POT_MAX_VALUE;
+    }
+    if (du->dtpitch.pitchshift_samples != du->dtpitch.last_pitchshift_samples)
+    {
+        du->dtpitch.last_pitchshift_samples = du->dtpitch.pitchshift_samples;
+        du->dtpitch.pitchshift_samples_2 = du->dtpitch.pitchshift_samples * 2;
+        du->dtpitch.pitchshift_samples_low_thr = du->dtpitch.pitchshift_samples / 16;
+        du->dtpitch.pitchshift_samples_high_thr = du->dtpitch.pitchshift_samples_2 - du->dtpitch.pitchshift_samples / 16;
+    }
+    if ((du->dtpitch.frequency != du->dtpitch.last_frequency) || (du->dtpitch.Q != du->dtpitch.last_Q))
+    {
+        du->dtpitch.last_frequency = du->dtpitch.frequency;
+        du->dtpitch.last_Q = du->dtpitch.Q;
+        float w0 = nyquist_fraction_omega(du->dtpitch.frequency);
+        float c0 = cosf(w0);
+        float a = float_a_value(w0,du->dtpitch.Q);
+        float bfpa0 = 1.0f/(1.0f+a);
+        du->dtpitch.filtb1 = float_to_sampled_int((1.0f-c0)*bfpa0);
+        du->dtpitch.filtb0 = float_to_sampled_int(0.5*(1.0f-c0)*bfpa0);
+        du->dtpitch.filta1 = float_to_sampled_int(-2.0f*c0*bfpa0);
+        du->dtpitch.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
+    }
+    du->dtpitch.samples_count += (4096 - ((int32_t)du->dtpitch.pitchshift_rate));
+    int32_t current_sample = du->dtpitch.samples_count / 4096;
+    if ((current_sample < 0) || (current_sample >= (du->dtpitch.pitchshift_samples_2)))
+    {
+            du->dtpitch.samples_count = du->dtpitch.pitchshift_samples * 4096;
+    } else if ((current_sample < du->dtpitch.pitchshift_samples_low_thr) || (current_sample >=  du->dtpitch.pitchshift_samples_high_thr))
+    {
+        int32_t dif = abs(((int32_t)sample_circ_buf_clean_value(du->dtpitch.pitchshift_samples)) -du->dtpitch.last_sample);
+        if (dif < (du->dtpitch.sample_avg / (16*512)))
+             du->dtpitch.samples_count = du->dtpitch.pitchshift_samples * 4096;
+    }
+    du->dtpitch.last_sample = ((int32_t)sample_circ_buf_clean_value(current_sample));
+    sample = (sample * ((int32_t)(255 - du->dtpitch.balance)) + du->dtpitch.last_sample * ((int32_t)du->dtpitch.balance)) / 256;
+    if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
+    if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
+    
+    du->dtpitch.sample_avg = (du->dtpitch.sample_avg*511)/512 + abs(du->dtpitch.last_sample);   
+
+    int32_t filtout =    ((int32_t)du->dtpitch.filtb0) * ((int32_t)sample + (int32_t)du->dtpitch.sampledly2)
+                       + ((int32_t)du->dtpitch.filtb1) * ((int32_t)du->dtpitch.sampledly1)  
+                       - ((int32_t)du->dtpitch.filta1) * ((int32_t)du->dtpitch.filtdly1)
+                       - ((int32_t)du->dtpitch.filta2) * ((int32_t)du->dtpitch.filtdly2);
+    filtout = fractional_int_remove_offset(filtout);
+    du->dtpitch.sampledly2 = du->dtpitch.sampledly1;
+    du->dtpitch.sampledly1 = sample;
+    du->dtpitch.filtdly2 = du->dtpitch.filtdly1;
+    du->dtpitch.filtdly1 = filtout;
+    return filtout;
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_pitchshift[] = 
+{
+    { "Samples",    offsetof(dsp_type_pitchshift,pitchshift_samples),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE/2 },
+    { "Rate",       offsetof(dsp_type_pitchshift,pitchshift_rate),      4, 5, 1, 16384 },
+    { "Balance",    offsetof(dsp_type_pitchshift,balance),             4, 3, 0, 255 },
+    { "Frequency",   offsetof(dsp_type_pitchshift,frequency),       2, 4, 100, 4000 },
+    { "Q",           offsetof(dsp_type_pitchshift,Q),               2, 3, 50, 999 },
+    { "RateCtrl",   offsetof(dsp_type_pitchshift,control_number3),  4, 1, 0, 6 },
+    { "BalCtrl",   offsetof(dsp_type_pitchshift,control_number2),  4, 1, 0, 6 },
+    { "SampCtrl",   offsetof(dsp_type_pitchshift,control_number1), 4, 1, 0, 6 },
+    { "SourceUnit", offsetof(dsp_type_pitchshift,source_unit),     4, 2, 1, MAX_DSP_UNITS },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_pitchshift dsp_type_pitchshift_default = { 0, 0, 200, 4096, 255, 2000, 400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+/************************************DSP_TYPE_OCTAVE*********************************/
+
+int32_t dsp_type_process_octave(int32_t sample, dsp_unit *du)
+{
+    if (du->dtoct.rectify) 
+    {
+        sample = abs(sample);
+        du->dtoct.sample_avg = (du->dtoct.sample_avg*511)/512 + sample;
+        sample -= (du->dtoct.sample_avg / 512);
+    }
+    
+    if (du->dtoct.multiplier > 1)
+    {
+        int32_t multval = sample * ((int32_t)du->dtoct.multiplier);
+        if (multval >= 0)
+        {
+            uint32_t rem = multval / (ADC_PREC_VALUE/2);
+            multval = ((int32_t)(((uint32_t)multval) % (ADC_PREC_VALUE/2)));
+            sample = ((rem & 0x01) == 1) ? ((ADC_PREC_VALUE/2) - 1 )- multval : multval;
+        } else
+        {
+            multval = -multval;
+            uint32_t rem = ((uint32_t)multval) / (ADC_PREC_VALUE/2);
+            multval = ((int32_t)((uint32_t)multval) % (ADC_PREC_VALUE/2));
+            sample = ((rem & 0x01) == 1) ? -(((ADC_PREC_VALUE/2) - 1 )- multval) : -multval;
+        }
+        du->dtoct.sample_avg2 = (du->dtoct.sample_avg2*511)/512 + sample;
+        sample -= (du->dtoct.sample_avg2 / 512);
+    }
+    
+    if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
+    if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
+    
+    return sample;
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_octave[] = 
+{
+    { "Rectify",    offsetof(dsp_type_octave,rectify),   4, 1, 0, 1},
+    { "Multplr",    offsetof(dsp_type_octave,multiplier), 4, 2, 1, 99 },
+    { "SourceUnit", offsetof(dsp_type_octave,source_unit),     4, 2, 1, MAX_DSP_UNITS },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_octave dsp_type_octave_default = { 0, 0, 1, 1, 0, 0 };
 
 /************STRUCTURES FOR ALL DSP TYPES *****************************/
 
@@ -1119,6 +1252,8 @@ const char * const dtnames[] =
     "Chorus",
     "Phaser",
     "Backwards",
+    "PitchShift",
+    "Octave",
     "Sin Synth",
     NULL
 };
@@ -1146,6 +1281,8 @@ const dsp_type_configuration_entry * const dtce[] =
     dsp_type_configuration_entry_chorus, 
     dsp_type_configuration_entry_phaser, 
     dsp_type_configuration_entry_backwards, 
+    dsp_type_configuration_entry_pitchshift, 
+    dsp_type_configuration_entry_octave, 
     dsp_type_configuration_entry_sin_synth, 
     NULL
 };
@@ -1172,6 +1309,8 @@ dsp_type_process * const dtp[] = {
     dsp_type_process_chorus,
     dsp_type_process_phaser,
     dsp_type_process_backwards,
+    dsp_type_process_pitchshift,
+    dsp_type_process_octave,
     dsp_type_process_sin_synth,
 };
 
@@ -1198,6 +1337,8 @@ const void * const dsp_unit_struct_defaults[] =
     (void *) &dsp_type_chorus_default,
     (void *) &dsp_type_phaser_default,
     (void *) &dsp_type_backwards_default,
+    (void *) &dsp_type_pitchshift_default,
+    (void *) &dsp_type_octave_default,
     (void *) &dsp_type_sine_synth_default
 };
 

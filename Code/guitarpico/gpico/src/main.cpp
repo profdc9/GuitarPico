@@ -74,8 +74,8 @@ void initialize_pwm(void)
     pwm_set_enabled(dac_pwm_b0_slice_num, true);
 }
 
-uint current_input = 0;
-uint control_sample_no = 0;
+uint current_input;
+uint control_sample_no;
 uint16_t control_samples[8];
 
 const int potvalues[6] = { 2, 1, 0, 3, 4, 6 };
@@ -157,6 +157,8 @@ void reset_periodic_alarm(void)
     if (claimed_alarm_num == UNCLAIMED_ALARM) return;
     
     hardware_alarm_cancel(claimed_alarm_num);
+    control_sample_no = 0;
+    current_input = 0;
     hardware_alarm_set_callback(claimed_alarm_num, alarm_func);
     last_time = make_timeout_time_us(1000);
     absolute_time_t next_alarm_time = update_next_timeout(last_time, 0, 8);
@@ -370,7 +372,7 @@ int main2();
 #define FLASH_PAGE_BYTES 4096u
 #define FLASH_OFFSET_STORED (2*1024*1024)
 #define FLASH_BASE_ADR 0x10000000
-#define FLASH_MAGIC_NUMBER 0xFEEDEEF2
+#define FLASH_MAGIC_NUMBER 0xFEEDEEFA
 
 #define FLASH_PAGES(x) ((((x)+(FLASH_PAGE_BYTES-1))/FLASH_PAGE_BYTES)*FLASH_PAGE_BYTES)
 
