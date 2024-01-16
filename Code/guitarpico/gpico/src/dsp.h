@@ -423,13 +423,13 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
-    uint32_t pitchshift_samples;
+    int32_t pitchshift_samples;
     uint32_t pitchshift_rate;
     uint32_t balance;
     uint32_t frequency;
     uint32_t Q;
     int32_t  samples_count;
-    uint32_t samples_inc;
+
     uint32_t control_number1;
     uint32_t pot_value1;
     uint32_t control_number2;
@@ -437,11 +437,14 @@ typedef struct
     uint32_t control_number3;
     uint32_t pot_value3;
 
-    uint32_t pitchshift_samples_2;
-    uint32_t pitchshift_samples_low_thr;
-    uint32_t pitchshift_samples_high_thr;
+    int32_t pitchshift_samples_2;
+    int32_t pitchshift_samples_12;
+    int32_t pitchshift_samples_32;
+    int32_t pitchshift_samples_4096;
+    int32_t pitchshift_samples_8192;
+    int32_t  pitchshift_samples_scale;
+    
     uint32_t last_pitchshift_samples;
-    uint32_t sample_avg;
     int32_t  last_sample;
     uint32_t last_frequency;
     uint32_t last_Q;

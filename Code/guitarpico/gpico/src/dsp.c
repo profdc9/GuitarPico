@@ -1119,8 +1119,12 @@ int32_t dsp_type_process_pitchshift(int32_t sample, dsp_unit *du)
     {
         du->dtpitch.last_pitchshift_samples = du->dtpitch.pitchshift_samples;
         du->dtpitch.pitchshift_samples_2 = du->dtpitch.pitchshift_samples * 2;
-        du->dtpitch.pitchshift_samples_low_thr = du->dtpitch.pitchshift_samples / 16;
-        du->dtpitch.pitchshift_samples_high_thr = du->dtpitch.pitchshift_samples_2 - du->dtpitch.pitchshift_samples / 16;
+        du->dtpitch.pitchshift_samples_12 = du->dtpitch.pitchshift_samples / 2;
+        du->dtpitch.pitchshift_samples_32 = du->dtpitch.pitchshift_samples * 3 / 2;
+        du->dtpitch.pitchshift_samples_4096 = du->dtpitch.pitchshift_samples * 4096;
+        du->dtpitch.pitchshift_samples_8192 = du->dtpitch.pitchshift_samples * 8192;
+        du->dtpitch.pitchshift_samples_scale = 32768 / du->dtpitch.pitchshift_samples;
+        du->dtpitch.samples_count = du->dtpitch.pitchshift_samples_4096;
     }
     if ((du->dtpitch.frequency != du->dtpitch.last_frequency) || (du->dtpitch.Q != du->dtpitch.last_Q))
     {
@@ -1136,23 +1140,34 @@ int32_t dsp_type_process_pitchshift(int32_t sample, dsp_unit *du)
         du->dtpitch.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
     }
     du->dtpitch.samples_count += (4096 - ((int32_t)du->dtpitch.pitchshift_rate));
-    int32_t current_sample = du->dtpitch.samples_count / 4096;
-    if ((current_sample < 0) || (current_sample >= (du->dtpitch.pitchshift_samples_2)))
+    if (du->dtpitch.samples_count < 0)  du->dtpitch.samples_count += du->dtpitch.pitchshift_samples_4096;
+    if (du->dtpitch.samples_count >= du->dtpitch.pitchshift_samples_8192) du->dtpitch.samples_count -= du->dtpitch.pitchshift_samples_4096;
+    int32_t current_sample = du->dtpitch.samples_count / 4096, val;
+    if (current_sample < du->dtpitch.pitchshift_samples_12)
     {
-            du->dtpitch.samples_count = du->dtpitch.pitchshift_samples * 4096;
-    } else if ((current_sample < du->dtpitch.pitchshift_samples_low_thr) || (current_sample >=  du->dtpitch.pitchshift_samples_high_thr))
+        val = ((sample_circ_buf_clean_value(current_sample)*current_sample + 
+               sample_circ_buf_clean_value(current_sample + du->dtpitch.pitchshift_samples_12)*(du->dtpitch.pitchshift_samples_12 - current_sample))*
+               du->dtpitch.pitchshift_samples_scale) / 16384;
+    } else if (current_sample < du->dtpitch.pitchshift_samples)
     {
-        int32_t dif = abs(((int32_t)sample_circ_buf_clean_value(du->dtpitch.pitchshift_samples)) -du->dtpitch.last_sample);
-        if (dif < (du->dtpitch.sample_avg / (16*512)))
-             du->dtpitch.samples_count = du->dtpitch.pitchshift_samples * 4096;
+        val = ((sample_circ_buf_clean_value(current_sample)*(du->dtpitch.pitchshift_samples - current_sample) + 
+               sample_circ_buf_clean_value(current_sample - du->dtpitch.pitchshift_samples_12)*(current_sample - du->dtpitch.pitchshift_samples_12))*
+               du->dtpitch.pitchshift_samples_scale) / 16384;
+    } else if (current_sample < du->dtpitch.pitchshift_samples_32)
+    {
+        val = ((sample_circ_buf_clean_value(current_sample)*(current_sample - du->dtpitch.pitchshift_samples) + 
+               sample_circ_buf_clean_value(current_sample + du->dtpitch.pitchshift_samples_12)*(du->dtpitch.pitchshift_samples_32 - current_sample))*
+               du->dtpitch.pitchshift_samples_scale) / 16384;
+    } else
+    {
+        val = ((sample_circ_buf_clean_value(current_sample)*(du->dtpitch.pitchshift_samples_2 - current_sample) + 
+               sample_circ_buf_clean_value(current_sample - du->dtpitch.pitchshift_samples_12)*(current_sample - du->dtpitch.pitchshift_samples_32))*
+               du->dtpitch.pitchshift_samples_scale) / 16384;
     }
-    du->dtpitch.last_sample = ((int32_t)sample_circ_buf_clean_value(current_sample));
-    sample = (sample * ((int32_t)(255 - du->dtpitch.balance)) + du->dtpitch.last_sample * ((int32_t)du->dtpitch.balance)) / 256;
+    sample = (sample * ((int32_t)(255 - du->dtpitch.balance)) + val * ((int32_t)du->dtpitch.balance)) / 256;
     if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
     if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
     
-    du->dtpitch.sample_avg = (du->dtpitch.sample_avg*511)/512 + abs(du->dtpitch.last_sample);   
-
     int32_t filtout =    ((int32_t)du->dtpitch.filtb0) * ((int32_t)sample + (int32_t)du->dtpitch.sampledly2)
                        + ((int32_t)du->dtpitch.filtb1) * ((int32_t)du->dtpitch.sampledly1)  
                        - ((int32_t)du->dtpitch.filta1) * ((int32_t)du->dtpitch.filtdly1)
@@ -1167,7 +1182,7 @@ int32_t dsp_type_process_pitchshift(int32_t sample, dsp_unit *du)
 
 const dsp_type_configuration_entry dsp_type_configuration_entry_pitchshift[] = 
 {
-    { "Samples",    offsetof(dsp_type_pitchshift,pitchshift_samples),   4, 5, 1, SAMPLE_CIRC_BUF_CLEAN_SIZE/2 },
+    { "Samples",    offsetof(dsp_type_pitchshift,pitchshift_samples),   4, 5, 1, 2048 },
     { "Rate",       offsetof(dsp_type_pitchshift,pitchshift_rate),      4, 5, 1, 16384 },
     { "Balance",    offsetof(dsp_type_pitchshift,balance),             4, 3, 0, 255 },
     { "Frequency",   offsetof(dsp_type_pitchshift,frequency),       2, 4, 100, 4000 },
@@ -1179,7 +1194,7 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_pitchshift[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_pitchshift dsp_type_pitchshift_default = { 0, 0, 200, 4096, 255, 2000, 400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const dsp_type_pitchshift dsp_type_pitchshift_default = { 0, 0, 800, 4096, 255, 2000, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_OCTAVE*********************************/
 
