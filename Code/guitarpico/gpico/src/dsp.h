@@ -430,8 +430,6 @@ typedef struct
     uint32_t Q;
     int32_t  samples_count;
 
-    uint32_t control_number1;
-    uint32_t pot_value1;
     uint32_t control_number2;
     uint32_t pot_value2;
     uint32_t control_number3;

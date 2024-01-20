@@ -1097,13 +1097,7 @@ const dsp_type_backwards dsp_type_backwards_default = { 0, 0, 2000, 255, 0, 0, 0
 
 int32_t dsp_type_process_pitchshift(int32_t sample, dsp_unit *du)
 {
-    uint32_t new_input = read_potentiometer_value(du->dtpitch.control_number1);
-    if (abs(new_input - du->dtpitch.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
-    {
-        du->dtpitch.pot_value1 = new_input;
-        du->dtpitch.pitchshift_samples = (du->dtpitch.pot_value1 * SAMPLE_CIRC_BUF_SIZE) / POT_MAX_VALUE;
-    }
-    new_input = read_potentiometer_value(du->dtpitch.control_number2);
+    uint32_t new_input = read_potentiometer_value(du->dtpitch.control_number2);
     if (abs(new_input - du->dtpitch.pot_value2) >= POTENTIOMETER_VALUE_SENSITIVITY)
     {
         du->dtpitch.pot_value2 = new_input;
@@ -1189,12 +1183,11 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_pitchshift[] =
     { "Q",           offsetof(dsp_type_pitchshift,Q),               2, 3, 50, 999 },
     { "RateCtrl",   offsetof(dsp_type_pitchshift,control_number3),  4, 1, 0, 6 },
     { "BalCtrl",   offsetof(dsp_type_pitchshift,control_number2),  4, 1, 0, 6 },
-    { "SampCtrl",   offsetof(dsp_type_pitchshift,control_number1), 4, 1, 0, 6 },
     { "SourceUnit", offsetof(dsp_type_pitchshift,source_unit),     4, 2, 1, MAX_DSP_UNITS },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_pitchshift dsp_type_pitchshift_default = { 0, 0, 800, 4096, 255, 2000, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const dsp_type_pitchshift dsp_type_pitchshift_default = { 0, 0, 800, 4096, 255, 2000, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_OCTAVE*********************************/
 
