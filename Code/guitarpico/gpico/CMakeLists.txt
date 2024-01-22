@@ -13,6 +13,7 @@ add_executable(gpico
     src/buttons.c
     src/dsp.c
     src/ui.c
+    src/pitch.c
     src/tinycl.cpp
 )
 

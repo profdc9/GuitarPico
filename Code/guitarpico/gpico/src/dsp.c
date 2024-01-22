@@ -1,3 +1,27 @@
+/* dsp.c
+
+*/
+
+/*
+   Copyright (c) 2024 Daniel Marks
+
+  This software is provided 'as-is', without any express or implied
+  warranty. In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+*/
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -87,30 +111,71 @@ const dsp_type_none dsp_type_none_default = { 0, 0 };
 
 int32_t dsp_type_process_sin_synth(int32_t sample, dsp_unit *du)
 {
-    uint32_t new_input = read_potentiometer_value(du->dtss.control_number);
-    if (abs(new_input - du->dtss.pot_value) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    uint32_t new_input = read_potentiometer_value(du->dtss.control_number1);
+    if (abs(new_input - du->dtss.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
     {
-        du->dtss.pot_value = new_input;
-        du->dtss.frequency = 40 + new_input/(POT_MAX_VALUE/2048);
+        du->dtss.pot_value1 = new_input;
+        du->dtss.frequency[0] = 40 + new_input/(POT_MAX_VALUE/2048);
     }
-    if (du->dtss.frequency != du->dtss.last_frequency)
+    new_input = read_potentiometer_value(du->dtss.control_number2);
+    if (abs(new_input - du->dtss.pot_value2) >= POTENTIOMETER_VALUE_SENSITIVITY)
     {
-        du->dtss.last_frequency = du->dtss.frequency;
-        du->dtss.sine_counter_inc = (du->dtss.frequency*65536) / GUITARPICO_SAMPLERATE;
+        du->dtss.pot_value2 = new_input;
+        du->dtss.amplitude[0] = new_input/(POT_MAX_VALUE/256);
     }
-    du->dtss.sine_counter += du->dtss.sine_counter_inc;
-    int16_t sine_val = sine_table_entry((du->dtss.sine_counter & 0xFFFF) / 256) / (QUANTIZATION_MAX / (ADC_PREC_VALUE/2));
+    if (du->dtss.frequency[0] != du->dtss.last_frequency[0])
+    {
+        du->dtss.last_frequency[0] = du->dtss.frequency[0];
+        du->dtss.sine_counter_inc[0] = (du->dtss.frequency[0]*65536) / GUITARPICO_SAMPLERATE;
+    }
+    if (du->dtss.frequency[1] != du->dtss.last_frequency[1])
+    {
+        du->dtss.last_frequency[1] = du->dtss.frequency[1];
+        du->dtss.sine_counter_inc[1] = (du->dtss.frequency[1]*65536) / GUITARPICO_SAMPLERATE;
+    }
+    if (du->dtss.frequency[2] != du->dtss.last_frequency[2])
+    {
+        du->dtss.last_frequency[2] = du->dtss.frequency[2];
+        du->dtss.sine_counter_inc[2] = (du->dtss.frequency[2]*65536) / GUITARPICO_SAMPLERATE;
+    }
+    uint ct = 1;
+    int32_t sine_val = sample * ((int32_t)du->dtss.mixval);
+    for (uint i=0;i<(sizeof(du->dtss.sine_counter)/sizeof(du->dtss.sine_counter[0]));i++)
+    {
+        if (du->dtss.amplitude[i] != 0) 
+        {
+            du->dtss.sine_counter[i] += du->dtss.sine_counter_inc[i];
+            int32_t val = sine_table_entry((du->dtss.sine_counter[i] & 0xFFFF) / 256) / (QUANTIZATION_MAX / (ADC_PREC_VALUE/2));
+            sine_val += val * ((int32_t)du->dtss.amplitude[i]);
+            ct++;
+        }
+    }
+    if (ct > 2)
+    {
+        sine_val /= (256 * 4);
+    } else if (ct > 1)
+    {
+        sine_val /= (256 * 2);
+    }
     return sine_val;
 }
 
+
 const dsp_type_configuration_entry dsp_type_configuration_entry_sin_synth[] = 
 {
-    { "Freqn",    offsetof(dsp_type_sine_synth,sine_counter_inc), 4, 4, 100, 4000 },
-    { "FreqCtrl", offsetof(dsp_type_sine_synth,control_number),   4, 1, 0, 6 },
+    { "Freq1",        offsetof(dsp_type_sine_synth,frequency[0]),     4, 4, 100, 4000 },
+    { "Amplitude1",   offsetof(dsp_type_sine_synth,amplitude[0]),     4, 3, 0,   255  },
+    { "Freq2",        offsetof(dsp_type_sine_synth,frequency[1]),     4, 4, 100, 4000 },
+    { "Amplitude2",   offsetof(dsp_type_sine_synth,amplitude[1]),     4, 3, 0,   255 },
+    { "Freq3",        offsetof(dsp_type_sine_synth,frequency[2]),     4, 4, 100, 4000 },
+    { "Amplitude3",   offsetof(dsp_type_sine_synth,amplitude[2]),     4, 3, 0,   255 },
+    { "Mixval",       offsetof(dsp_type_sine_synth,mixval),           4, 4, 0,   255 },
+    { "FreqCtrl",     offsetof(dsp_type_sine_synth,control_number1),  4, 1, 0, 6 },
+    { "AmpCtrl",      offsetof(dsp_type_sine_synth,control_number2),  4, 1, 0, 6 },
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-const dsp_type_sine_synth dsp_type_sine_synth_default = { 0, 0, 0, 3000, 0, 0, 0, 0 };
+const dsp_type_sine_synth dsp_type_sine_synth_default = { 0, 0, 255, { 300, 300, 300}, {255, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, 0, 0, 0, 0 };
 
 /************************************DSP_TYPE_NOISEGATE**********************************/
 
@@ -1363,17 +1428,21 @@ uint32_t dsp_read_value_prec(void *v, int prec)
 
 void dsp_set_value_prec(void *v, int prec, uint32_t val)
 {
+    DMB();
     if (prec == 1)
     {
         *((uint8_t *)v) = val;
         return;
-    }
-    if (prec == 2)
+    } else if (prec == 2)
     {
         *((uint16_t *)v) = val;
         return;
+    } else
+    {
+        *((uint32_t *)v) = val;
     }
-    *((uint32_t *)v) = val;
+    DMB();
+
 }
 
 void dsp_unit_initialize(int dsp_unit_number, dsp_unit_type dut)
@@ -1384,8 +1453,10 @@ void dsp_unit_initialize(int dsp_unit_number, dsp_unit_type dut)
     
     dsp_unit_struct_zero(du);
     memcpy((void *)du, dsp_unit_struct_defaults[dut], sizeof(dsp_unit));
-    du->dtn.dut = dut;
     du->dtn.source_unit = dsp_unit_number + 1;
+    DMB();
+    du->dtn.dut = dut;
+    DMB();
 }
 
 void dsp_unit_reset(int dsp_unit_number)

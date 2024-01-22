@@ -1,15 +1,33 @@
+/* main.cpp
 
-// ****************************************************************************
-//
-//                                 Main code
-//
-// ****************************************************************************
+*/
+
+/*
+   Copyright (c) 2024 Daniel Marks
+
+  This software is provided 'as-is', without any express or implied
+  warranty. In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+*/
 
 #include "main.h"
 #include "guitarpico.h"
 #include "ssd1306_i2c.h"
 #include "buttons.h"
 #include "dsp.h"
+#include "pitch.h"
 #include "ui.h"
 #include "tinycl.h"
 #include <string.h>
@@ -143,6 +161,7 @@ static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
     if (s < (-ADC_PREC_VALUE/2)) s = (-ADC_PREC_VALUE/2);
     if (s > (ADC_PREC_VALUE/2-1)) s = (ADC_PREC_VALUE/2-1);
     insert_sample_circ_buf_clean(s);
+    insert_pitch_edge(s, counter);
     s = dsp_process_all_units(s);
     insert_sample_circ_buf(s);
     if (s > (ADC_PREC_VALUE/2-1)) next_sample = DAC_PWM_WRAP_VALUE-1;
@@ -198,17 +217,6 @@ void initialize_adc(void)
     adc_select_input(0);
     current_input = 0;
     adc_run(true);
-}
-
-void test_all_control(void)
-{
-    char s1[100];
-    char s2[100];
-    sprintf(s1,"counter:%d %u\n",counter,(uint32_t)((((uint64_t)counter)*1000000)/time_us_32()));
-    sprintf(s2,"dly1: %u dly2: %u dly3: %u\n",dly1,dly2,dly3);
-    printf("%s%s",s1,s2);
-    for (int i=0;i<8;i++)
-        printf("control:%d value:%d\n",i,control_samples[i]);
 }
 
 void initialize_gpio(void)
@@ -372,7 +380,7 @@ int main2();
 #define FLASH_PAGE_BYTES 4096u
 #define FLASH_OFFSET_STORED (2*1024*1024)
 #define FLASH_BASE_ADR 0x10000000
-#define FLASH_MAGIC_NUMBER 0xFEEDEEFB
+#define FLASH_MAGIC_NUMBER 0xFEEDEEFC
 
 #define FLASH_PAGES(x) ((((x)+(FLASH_PAGE_BYTES-1))/FLASH_PAGE_BYTES)*FLASH_PAGE_BYTES)
 
@@ -555,6 +563,41 @@ void flash_save(void)
     message_to_display(flash_save_bank(bankno-1) ? "Save Failed" : "Save Succeeded");      
 }
 
+void pitch_measure(void)
+{
+
+    char str[40];
+    bool endloop = false;
+
+    clear_display();
+    while (!endloop)
+    {
+        uint32_t last_time = time_us_32();
+        while ((time_us_32() - last_time) < 100000)
+        {
+            buttons_poll();
+            if (button_enter() || button_left()) 
+            {
+                endloop = true;
+                break;
+            }
+        }
+        absolute_time_t at = get_absolute_time();
+        uint32_t l = to_us_since_boot(at);
+        pitch_edge_autocorrelation();
+        pitch_buffer_reset();
+        uint32_t hz = pitch_estimate_peak_hz();
+        at = get_absolute_time();
+        uint32_t m = to_us_since_boot(at);
+        sprintf(str,"Hz: %u",hz);
+        write_str_with_spaces(0,0,str,16);
+        sprintf(str,"Time: %u",m-l);
+        write_str_with_spaces(0,1,str,16);
+        display_refresh();
+    }
+}
+
+
 void debugstuff(void)
 {
     char str[40];
@@ -566,7 +609,7 @@ void debugstuff(void)
         while ((time_us_32() - last_time) < 100000)
         {
             buttons_poll();
-            if (button_enter()) 
+            if (button_enter() || button_left()) 
             {
                 endloop = true;
                 break;
@@ -591,15 +634,11 @@ void debugstuff(void)
         sprintf(str,"rate %u",(uint32_t)((((uint64_t)counter)*1000000)/time_us_32()));
         ssd1306_set_cursor(0,5);
         ssd1306_printstring(str);
-        sprintf(str,"data %u",sizeof(dsp_units));
-        ssd1306_set_cursor(0,6);
-        ssd1306_printstring(str);
         ssd1306_render();
-        //test_all_control();
     }
 }
 
-const char * const mainmenu[] = { "Adjust", "Debug", "Load", "Save", NULL };
+const char * const mainmenu[] = { "Adjust", "Pitch", "Debug", "Load", "Save", NULL };
 
 menu_str mainmenu_str = { mainmenu, 0, 2, 15, 0, 0 };
 
@@ -791,6 +830,30 @@ int getdesc_cmd(int args, tinycl_parameter* tp, void *v)
   return 1;
 }
 
+int a_cmd(int args, tinycl_parameter* tp, void *v)
+{
+    absolute_time_t at = get_absolute_time();
+    uint32_t l = to_us_since_boot(at);
+    pitch_edge_autocorrelation();
+    at = get_absolute_time();
+    uint32_t m = to_us_since_boot(at);
+    for (uint i=0;i<NUM_PITCH_EDGES;i++)
+    {
+        printf("%u edge: neg: %u sample: %d  counter: %d\n", i, pitch_edges[i].negative, pitch_edges[i].sample, pitch_edges[i].counter-pitch_edges[0].counter);
+    }
+    for (uint i=pitch_autocor_size;i>0;)
+    {
+        i--;
+        printf("%u offset: %u autocor: %d", i, pitch_autocor[i].offset, pitch_autocor[i].autocor);
+        printf("     %d %d %d\r\n",pitch_autocorrelation_sample(pitch_autocor[i].offset-1),
+                                 pitch_autocorrelation_sample(pitch_autocor[i].offset),
+                                 pitch_autocorrelation_sample(pitch_autocor[i].offset+1));
+    }
+    printf("total us: %u\n", (uint32_t)(m-l));
+    pitch_buffer_reset();
+    return 1;
+}
+
 int help_cmd(int args, tinycl_parameter *tp, void *v);
 
 const tinycl_command tcmds[] =
@@ -804,6 +867,7 @@ const tinycl_command tcmds[] =
   { "CONF", "Get configuration list", conf_cmd, TINYCL_PARM_INT, TINYCL_PARM_INT, TINYCL_PARM_END },
   { "INIT", "Set type of effect", init_cmd, TINYCL_PARM_INT, TINYCL_PARM_INT, TINYCL_PARM_END },
   { "TYPE", "Get type of effect", type_cmd, TINYCL_PARM_INT, TINYCL_PARM_END },
+  { "A", "Test autocorrelation", a_cmd, TINYCL_PARM_END },
   { "TEST", "Test", test_cmd, TINYCL_PARM_INT, TINYCL_PARM_END },
   { "HELP", "Display This Help", help_cmd, {TINYCL_PARM_END } }
 };
@@ -817,7 +881,9 @@ int help_cmd(int args, tinycl_parameter *tp, void *v)
 int main()
 {
     stdio_init_all();
+    sleep_ms(100);
     initialize_dsp();
+    initialize_pitch();
     initialize_gpio();
     buttons_initialize();
     initialize_pwm();
@@ -827,7 +893,6 @@ int main()
     initialize_periodic_alarm();
     flash_load_most_recent();
     
-    ssd1306_set_cursor(0,0);
     for (;;)
     {
         clear_display();
@@ -850,11 +915,13 @@ int main()
         {
             case 0:  adjust_dsp_params();
                      break;
-            case 1:  debugstuff();
+            case 1:  pitch_measure();
                      break;
-            case 2:  flash_load();
+            case 2:  debugstuff();
                      break;
-            case 3:  flash_save();
+            case 3:  flash_load();
+                     break;
+            case 4:  flash_save();
                      break;
         }
     }
