@@ -32,8 +32,8 @@ extern "C"
 
 #define NUM_PITCH_EDGES 64
 #define NUM_AUTOCOR_PEAKS 32
-#define NUM_AUTOCOR_PEAKS_SORT 16
-#define PITCH_MIN_OFFSET 15
+#define NUM_AUTOCOR_PEAKS_SORT 10
+#define PITCH_MIN_OFFSET 18
 #define EDGE_HYSTERESIS 600
 
 typedef struct
@@ -49,10 +49,19 @@ typedef struct
     int32_t  autocor;
 } pitch_autocor_peak;
 
+typedef struct
+{
+    const char *note;
+    uint32_t frequency_hz;
+} note_struct;
+
 void initialize_pitch(void);
 void pitch_edge_autocorrelation(void);
 int32_t pitch_autocorrelation_sample(uint32_t offset);
 int32_t pitch_estimate_peak_hz(void);
+int32_t pitch_find_note(uint32_t freq_hz);
+
+extern const note_struct notes[];
 
 extern   pitch_edge pitch_edges[NUM_PITCH_EDGES];
 extern   pitch_autocor_peak pitch_autocor[NUM_AUTOCOR_PEAKS];

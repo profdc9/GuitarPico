@@ -570,6 +570,8 @@ void pitch_measure(void)
     bool endloop = false;
 
     clear_display();
+    uint32_t hz = 0;
+    int32_t last_note = -1, note_no = -1;
     while (!endloop)
     {
         uint32_t last_time = time_us_32();
@@ -586,13 +588,22 @@ void pitch_measure(void)
         uint32_t l = to_us_since_boot(at);
         pitch_edge_autocorrelation();
         pitch_buffer_reset();
-        uint32_t hz = pitch_estimate_peak_hz();
+        uint32_t hzn = pitch_estimate_peak_hz();
+        int32_t note_no_n = pitch_find_note(hzn);
+        if ((note_no_n >= 0) && (note_no_n == last_note))
+        {
+            note_no = note_no_n;
+            hz = hzn;
+            last_note = -1;
+        } else last_note = note_no_n;
         at = get_absolute_time();
         uint32_t m = to_us_since_boot(at);
         sprintf(str,"Hz: %u",hz);
         write_str_with_spaces(0,0,str,16);
-        sprintf(str,"Time: %u",m-l);
+        sprintf(str,"Nt: %s %u", note_no < 0 ? "None" : notes[note_no].note, note_no < 0 ? 0 : notes[note_no].frequency_hz);
         write_str_with_spaces(0,1,str,16);
+        sprintf(str,"Time: %u",m-l);
+        write_str_with_spaces(0,2,str,16);
         display_refresh();
     }
 }
