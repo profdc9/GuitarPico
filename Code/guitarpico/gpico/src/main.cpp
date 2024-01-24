@@ -119,22 +119,17 @@ static inline absolute_time_t update_next_timeout(const absolute_time_t last_tim
     return (absolute_time_diff_us(next_time, next_time_sooner) < 0) ? next_time : next_time_sooner;
 }
 
-
 static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
 {
     uint16_t sample;
     uint32_t cur_time;
     static int32_t sample_avg;
+    absolute_time_t next_alarm_time;
 
     sample = adc_hw->result;
     cur_time = timer_hw->timelr;
     current_input = (current_input+1) & 0x01;
     
-    uint32_t dly_sec = current_input ? 10 : 30;
-    last_time = delayed_by_us(last_time, dly_sec);
-    absolute_time_t next_alarm_time = update_next_timeout(last_time, 0, 8);
-    //absolute_time_t next_alarm_time = make_timeout_time_us(dly_sec);
-    hardware_alarm_set_target(claimed_alarm_num, next_alarm_time);
     adc_select_input(current_input);
     if (current_input == 0)
     {
@@ -146,6 +141,11 @@ static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
         gpio_put(GPIO_ADC_SEL0, (control_sample_no & 0x01) == 0);
         gpio_put(GPIO_ADC_SEL1, (control_sample_no & 0x02) == 0);
         gpio_put(GPIO_ADC_SEL2, (control_sample_no & 0x04) == 0);
+        last_time = delayed_by_us(last_time, 10);
+        do
+        {
+            next_alarm_time = update_next_timeout(last_time, 0, 8);
+        } while (hardware_alarm_set_target(claimed_alarm_num, next_alarm_time));
         last2 = cur_time;
         return;
     } 
@@ -167,7 +167,11 @@ static void __no_inline_not_in_flash_func(alarm_func)(uint alarm_num)
     if (s > (ADC_PREC_VALUE/2-1)) next_sample = DAC_PWM_WRAP_VALUE-1;
     else if (s < (-ADC_PREC_VALUE/2)) next_sample = 0;
     else next_sample = (s+(ADC_PREC_VALUE/2)) / (ADC_PREC_VALUE/DAC_PWM_WRAP_VALUE);
-
+    last_time = delayed_by_us(last_time, 30);
+    do
+    {
+        next_alarm_time = update_next_timeout(last_time, 0, 8);
+    } while (hardware_alarm_set_target(claimed_alarm_num, next_alarm_time));
     counter++;
 }
 
@@ -193,7 +197,9 @@ void initialize_periodic_alarm(void)
         reset_periodic_alarm();
         return;
     }
-    for (uint alarm_no=0;alarm_no<4;alarm_no++)
+    claimed_alarm_num = hardware_alarm_claim_unused(true);
+    reset_periodic_alarm();
+    /*for (uint alarm_no=0;alarm_no<4;alarm_no++)
     {
         if (!hardware_alarm_is_claimed(alarm_no))
         {
@@ -202,7 +208,7 @@ void initialize_periodic_alarm(void)
             reset_periodic_alarm();
             break;
         }
-    }
+    } */
 }
 
 void initialize_adc(void)
@@ -642,7 +648,7 @@ void debugstuff(void)
         sprintf(str,"buf: %d",sample_circ_buf_value(0));
         ssd1306_set_cursor(0,4);
         ssd1306_printstring(str);
-        sprintf(str,"rate %u",(uint32_t)((((uint64_t)counter)*1000000)/time_us_32()));
+         sprintf(str,"rate %u",(uint32_t)((((uint64_t)counter)*1000000)/time_us_32()));
         ssd1306_set_cursor(0,5);
         ssd1306_printstring(str);
         ssd1306_render();
@@ -892,7 +898,6 @@ int help_cmd(int args, tinycl_parameter *tp, void *v)
 int main()
 {
     stdio_init_all();
-    sleep_ms(100);
     initialize_dsp();
     initialize_pitch();
     initialize_gpio();

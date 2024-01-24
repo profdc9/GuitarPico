@@ -34,7 +34,7 @@ extern "C"
 #define NUM_AUTOCOR_PEAKS 32
 #define NUM_AUTOCOR_PEAKS_SORT 10
 #define PITCH_MIN_OFFSET 18
-#define EDGE_HYSTERESIS 600
+#define EDGE_HYSTERESIS 100
 
 typedef struct
 {

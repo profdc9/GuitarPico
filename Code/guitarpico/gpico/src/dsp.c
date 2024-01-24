@@ -1058,7 +1058,7 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
             w2 = temp;
         }
         float a = float_a_value(w1, du->dtphaser.Q);
-        float bfpa0 = 1.0f/(1.0f+a);
+        float bfpa0 = 0.999f/(1.0f+a);
         du->dtphaser.filta1_interp1 = du->dtphaser.filta1 = float_to_sampled_int(-2.0f*cosf(w1)*bfpa0);
         du->dtphaser.filta1_interp2 = float_to_sampled_int(-2.0f*cosf(w2)*bfpa0);
         du->dtphaser.filta2 = float_to_sampled_int((1.0f-a)*bfpa0);
@@ -1075,7 +1075,7 @@ int32_t dsp_type_process_phaser(int32_t sample, dsp_unit *du)
         int32_t last_filtout = filtout;
         filtout =     ((int32_t)du->dtphaser.filta2) * (((int32_t)last_filtout) - ((int32_t)du->dtphaser.filtdly2[stage]))
                             + ((int32_t)du->dtphaser.filta1) * (((int32_t)du->dtphaser.sampledly1[stage]) - ((int32_t)du->dtphaser.filtdly1[stage]))
-                            + ((int32_t)du->dtphaser.sampledly2[stage]) * float_to_sampled_int(1.0f);
+                            + ((int32_t)du->dtphaser.sampledly2[stage]) * float_to_sampled_int(0.999f);
                
         filtout = fractional_int_remove_offset(filtout);
         du->dtphaser.sampledly2[stage] = du->dtphaser.sampledly1[stage];
