@@ -94,6 +94,7 @@ typedef enum
     DSP_TYPE_ENVELOPE,
     DSP_TYPE_DISTORTION,
     DSP_TYPE_OVERDRIVE,
+    DSP_TYPE_COMPRESSOR,
     DSP_TYPE_RING,
     DSP_TYPE_FLANGER,
     DSP_TYPE_CHORUS,
@@ -364,6 +365,22 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
+    uint32_t attack;
+    int32_t  attack_threshold;
+    uint32_t release;
+    int32_t  release_threshold;
+    int32_t  gain, level, nlevel;
+    uint32_t skip;
+    uint32_t control_number1;
+    uint32_t pot_value1;
+    uint32_t control_number2;
+    uint32_t pot_value2;
+} dsp_type_compressor;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    uint32_t source_unit;
     uint32_t sine_counter;
     uint32_t sine_counter_inc;
     uint32_t frequency;
@@ -512,6 +529,7 @@ typedef union
     dsp_type_envelope     dtenv;
     dsp_type_distortion   dtdist;
     dsp_type_overdrive    dtovr;
+    dsp_type_compressor   dtcomp;
     dsp_type_ring         dtring;
     dsp_type_flange       dtflng;
     dsp_type_chorus       dtchor;

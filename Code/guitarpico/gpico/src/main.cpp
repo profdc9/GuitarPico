@@ -37,9 +37,6 @@
 void initialize_video(void);
 void halt_video(void);
 
-#define POLLING_FREQUENCY_HZ 50000u
-#define POLLING_FREQUENCY_US (1000000u/POLLING_FREQUENCY_HZ)
-
 #define UNCLAIMED_ALARM 0xFFFFFFFF
 
 uint dac_pwm_b3_slice_num, dac_pwm_b2_slice_num, dac_pwm_b1_slice_num, dac_pwm_b0_slice_num;
@@ -48,6 +45,15 @@ uint claimed_alarm_num = UNCLAIMED_ALARM;
 const u8* Fonts[5] = { FontBold8x8, FontGame8x8, FontIbm8x8, FontItalic8x8, FontThin8x8 };
 
 volatile uint32_t counter = 0;
+
+extern "C" {
+    
+void idle_task(void)
+{
+    buttons_poll();
+}
+
+}
 
 void initialize_pwm(void)
 {
@@ -255,7 +261,7 @@ void adjust_parms(uint8_t unit_no)
     for (;;)
     {
         const dsp_type_configuration_entry *d = dtce[dsp_units[unit_no].dtn.dut];
-        buttons_poll();
+        idle_task();
         if (redraw)
         {
             if (sel == 0)
@@ -301,7 +307,7 @@ void adjust_parms(uint8_t unit_no)
                 do_show_menu_item(&mst);
                 do
                 {
-                    buttons_poll();
+                    idle_task();
                     res = do_menu(&mst);
                 } while (res == 0);
                 if (res == 3)
@@ -325,7 +331,7 @@ void adjust_parms(uint8_t unit_no)
                 scroll_number_start(&snd);
                 do
                 {
-                    buttons_poll();
+                    idle_task();
                     scroll_number_key(&snd);
                 } while (!snd.entered);
                 if (snd.changed)
@@ -346,7 +352,7 @@ void adjust_dsp_params(void)
     button_clear();
     for (;;)
     {
-        buttons_poll();
+        idle_task();
         if (redraw)
         {
             clear_display();
@@ -386,7 +392,7 @@ int main2();
 #define FLASH_PAGE_BYTES 4096u
 #define FLASH_OFFSET_STORED (2*1024*1024)
 #define FLASH_BASE_ADR 0x10000000
-#define FLASH_MAGIC_NUMBER 0xFEEDEEFC
+#define FLASH_MAGIC_NUMBER 0xFEEDEEFD
 
 #define FLASH_PAGES(x) ((((x)+(FLASH_PAGE_BYTES-1))/FLASH_PAGE_BYTES)*FLASH_PAGE_BYTES)
 
@@ -426,7 +432,7 @@ void message_to_display(const char *msg)
     buttons_clear();
     for (;;)
     {
-       buttons_poll();
+       idle_task();
        if (button_enter()) break;
      }
 }
@@ -463,7 +469,7 @@ uint select_bankno(void)
         buttons_clear();
         for (;;)
         {
-            buttons_poll();
+            idle_task();
             if (button_enter())
             {
                 notend = false;
@@ -560,7 +566,7 @@ void flash_save(void)
     scroll_alpha_start(&sad);
     for (;;)
     {
-        buttons_poll();
+        idle_task();
         scroll_alpha_key(&sad);
         if (sad.exited) return;
         if (sad.entered) break;
@@ -583,7 +589,7 @@ void pitch_measure(void)
         uint32_t last_time = time_us_32();
         while ((time_us_32() - last_time) < 100000)
         {
-            buttons_poll();
+            idle_task();
             if (button_enter() || button_left()) 
             {
                 endloop = true;
@@ -625,7 +631,7 @@ void debugstuff(void)
         uint32_t last_time = time_us_32();
         while ((time_us_32() - last_time) < 100000)
         {
-            buttons_poll();
+            idle_task();
             if (button_enter() || button_left()) 
             {
                 endloop = true;
@@ -923,7 +929,7 @@ int main()
                 tinycl_do_echo = 1;
                 tinycl_put_string("> ");
             }
-            buttons_poll();
+            idle_task();
             uint val = do_menu(&mainmenu_str);
             if ((val == 2) || (val == 3)) break;
         }

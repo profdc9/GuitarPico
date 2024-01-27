@@ -33,6 +33,8 @@
 #include "ui.h"
 #include "ssd1306_i2c.h"
 
+extern void idle_task(void);
+
 #define cleardisplay() ssd1306_Clear_Buffer();
 #define setcursor(x,y) ssd1306_set_cursor(x,y)
 #define cursoronoff(c) ssd1306_set_cursor_onoff(c)
@@ -41,7 +43,7 @@
 #define readunbounced(c) button_readunbounced(c)
 #define getbuttonpressed(c) button_getpressed(c)
 #define displayrefresh() ssd1306_update()
-#define idle_task() 
+#define ui_idle_task() idle_task()
 #define clearbuttons() buttons_clear()
 #define getmillis() (time_us_32() / 1000)
 
@@ -168,7 +170,7 @@ void select_item(menu_str *menu, uint8_t item)
 
 uint8_t do_menu(menu_str *menu)
 {
-  idle_task();
+  ui_idle_task();
   if (button_left())
   {
     clearbuttons();
@@ -246,7 +248,7 @@ void scroll_number_key(scroll_number_dat *snd)
 
   setcursor(snd->col + snd->position + ((snd->decs != 0) && ((snd->position + snd->decs) >= snd->digits)), snd->row);
   displayrefresh();
-  idle_task();
+  ui_idle_task();
   if (button_enter())
   {
     snd->entered = 1;
@@ -345,7 +347,7 @@ void scroll_alpha_key(scroll_alpha_dat *sad)
   uint8_t redraw = 0;
 
   setcursor(sad->col + sad->cursorpos, sad->row);
-  idle_task();
+  ui_idle_task();
   if (button_enter())
   { 
     sad->entered = 1;
@@ -422,7 +424,7 @@ bool show_lr(uint8_t row, const char *message, const char *message_2)
       write_str_with_spaces(0, row, cur_msg ? (message_2 != NULL ? message_2 : message) : message, 16);
       cur_msg = !cur_msg;
     }
-    idle_task();
+    ui_idle_task();
     if (button_left())
     {
       display_clear_row(0,row,16);
@@ -481,7 +483,7 @@ void scroll_readout_key(scroll_readout_dat *srd)
 {
   setcursor(srd->col, srd->row);
   displayrefresh();
-  idle_task();
+  ui_idle_task();
   if (button_left())
   {
     if (srd->position > 0)

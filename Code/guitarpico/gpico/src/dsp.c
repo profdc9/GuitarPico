@@ -891,7 +891,7 @@ int32_t dsp_type_process_overdrive(int32_t sample, dsp_unit *du)
 const dsp_type_configuration_entry dsp_type_configuration_entry_overdrive[] = 
 {
     { "Threshold",    offsetof(dsp_type_overdrive,threshold),               4, 3, 1, 255 },
-    { "Ampltiude",    offsetof(dsp_type_overdrive,amplitude),               4, 3, 1, 255 },
+    { "Amplitude",    offsetof(dsp_type_overdrive,amplitude),               4, 3, 1, 255 },
     { "ThrshCntrl",   offsetof(dsp_type_overdrive,control_number1),         4, 1, 0, 6 },
     { "AmplCntrl",    offsetof(dsp_type_overdrive,control_number2),         4, 1, 0, 6 },
     { "SourceUnit",   offsetof(dsp_type_overdrive,source_unit),             4, 2, 1, MAX_DSP_UNITS },
@@ -899,6 +899,60 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_overdrive[] =
 };
 
 const dsp_type_overdrive dsp_type_overdrive_default = { 0, 0, 64, 192, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+/************************************DSP_TYPE_COMPRESSOR*************************************/
+
+int32_t dsp_type_process_compressor(int32_t sample, dsp_unit *du)
+{
+    uint32_t new_input = read_potentiometer_value(du->dtcomp.control_number1);
+    if (abs(new_input - du->dtcomp.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtcomp.pot_value1 = new_input;
+        du->dtcomp.attack = (new_input * 256) / POT_MAX_VALUE; 
+    }
+    new_input = read_potentiometer_value(du->dtcomp.control_number2);
+    if (abs(new_input - du->dtcomp.pot_value2) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtcomp.pot_value2 = new_input;
+        du->dtcomp.release = (new_input * 256) / POT_MAX_VALUE; 
+    }
+
+    sample = (sample * du->dtcomp.gain) / 4096;
+    if (sample > (ADC_PREC_VALUE/2-1)) sample=ADC_PREC_VALUE/2-1;
+    if (sample < (-ADC_PREC_VALUE/2)) sample=-ADC_PREC_VALUE/2;
+    
+    du->dtcomp.level = (du->dtcomp.level*511)/512 + abs(sample);
+    du->dtcomp.nlevel = du->dtcomp.level / 512;
+    
+    if ((++du->dtcomp.skip)>=4)
+    {
+        du->dtcomp.skip = 0;
+        if (du->dtcomp.nlevel > du->dtcomp.release_threshold)
+            du->dtcomp.gain -= (du->dtcomp.gain * du->dtcomp.release) / 65536;
+        else if (du->dtcomp.nlevel < du->dtcomp.attack_threshold)
+            du->dtcomp.gain += (du->dtcomp.gain * du->dtcomp.attack) / 65536;
+    }
+    
+    if (du->dtcomp.gain < 4096) du->dtcomp.gain = 4096;
+    if (du->dtcomp.gain > 16384) du->dtcomp.gain = 16384;
+
+    return sample;
+}
+const dsp_type_configuration_entry dsp_type_configuration_entry_compressor[] = 
+{
+    //{ "Gain",         offsetof(dsp_type_compressor,gain),                    4, 5, 1, 25555 },
+    //{ "Level",        offsetof(dsp_type_compressor,nlevel),                   4, 5, 0, 60000 },
+    { "Attack",       offsetof(dsp_type_compressor,attack),                  4, 3, 16, 255 },
+    { "Release",      offsetof(dsp_type_compressor,release),                 4, 3, 16, 255 },
+    { "AtkThresh",    offsetof(dsp_type_compressor,attack_threshold),        4, 5, 0, ADC_PREC_VALUE },
+    { "RlsThresh",    offsetof(dsp_type_compressor,release_threshold),       4, 5, 0, ADC_PREC_VALUE },
+    { "AtkCtrl",      offsetof(dsp_type_compressor,control_number1),         4, 1, 0, 6 },
+    { "RlsCtrl",      offsetof(dsp_type_compressor,control_number2),         4, 1, 0, 6 },
+    { "SourceUnit",   offsetof(dsp_type_compressor,source_unit),             4, 2, 1, MAX_DSP_UNITS },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_compressor dsp_type_compressor_default = { 0, 0, 40, 400, 100, 3000, 16384, 0, 0, 0, 0, 0, 0 ,0 };
 
 /************************************DSP_TYPE_RING*************************************/
 
@@ -1320,6 +1374,7 @@ const char * const dtnames[] =
     "Envelope",
     "Distortion",
     "Overdrive",
+    "Compressor",
     "Ring",
     "Flanger",
     "Chorus",
@@ -1349,6 +1404,7 @@ const dsp_type_configuration_entry * const dtce[] =
     dsp_type_configuration_entry_envelope, 
     dsp_type_configuration_entry_distortion, 
     dsp_type_configuration_entry_overdrive, 
+    dsp_type_configuration_entry_compressor, 
     dsp_type_configuration_entry_ring, 
     dsp_type_configuration_entry_flange, 
     dsp_type_configuration_entry_chorus, 
@@ -1377,6 +1433,7 @@ dsp_type_process * const dtp[] = {
     dsp_type_process_envelope,
     dsp_type_process_distortion,
     dsp_type_process_overdrive,
+    dsp_type_process_compressor,
     dsp_type_process_ring,
     dsp_type_process_flange,
     dsp_type_process_chorus,
@@ -1405,6 +1462,7 @@ const void * const dsp_unit_struct_defaults[] =
     (void *) &dsp_type_envelope_default,
     (void *) &dsp_type_distortion_default,
     (void *) &dsp_type_overdrive_default,
+    (void *) &dsp_type_compressor_default,
     (void *) &dsp_type_ring_default,
     (void *) &dsp_type_flange_default,
     (void *) &dsp_type_chorus_default,
