@@ -15,6 +15,8 @@ add_executable(gpico
     src/ui.c
     src/pitch.c
     src/tinycl.cpp
+    src/usbmain.c
+    src/usb_descriptors.c
 )
 
 add_picovga(gpico)
@@ -28,4 +30,4 @@ target_include_directories(gpico PRIVATE
 pico_add_extra_outputs(gpico)
 
 # Allow stdio to USB
-pico_enable_stdio_usb(gpico 1)
+pico_enable_stdio_usb(gpico 0)

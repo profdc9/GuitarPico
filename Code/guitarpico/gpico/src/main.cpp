@@ -34,6 +34,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "usbmain.h"
+
 void initialize_video(void);
 void halt_video(void);
 
@@ -51,6 +53,8 @@ extern "C" {
 void idle_task(void)
 {
     buttons_poll();
+    usb_task();
+    cdc_task();
 }
 
 }
@@ -855,6 +859,7 @@ int getdesc_cmd(int args, tinycl_parameter* tp, void *v)
 
 int a_cmd(int args, tinycl_parameter* tp, void *v)
 {
+    char s[256];
     absolute_time_t at = get_absolute_time();
     uint32_t l = to_us_since_boot(at);
     pitch_edge_autocorrelation();
@@ -862,17 +867,21 @@ int a_cmd(int args, tinycl_parameter* tp, void *v)
     uint32_t m = to_us_since_boot(at);
     for (uint i=0;i<NUM_PITCH_EDGES;i++)
     {
-        printf("%u edge: neg: %u sample: %d  counter: %d\n", i, pitch_edges[i].negative, pitch_edges[i].sample, pitch_edges[i].counter-pitch_edges[0].counter);
+        sprintf(s,"%u edge: neg: %u sample: %d  counter: %d\r\n", i, pitch_edges[i].negative, pitch_edges[i].sample, pitch_edges[i].counter-pitch_edges[0].counter);
+        tinycl_put_string(s);
     }
     for (uint i=pitch_autocor_size;i>0;)
     {
         i--;
-        printf("%u offset: %u autocor: %d", i, pitch_autocor[i].offset, pitch_autocor[i].autocor);
-        printf("     %d %d %d\r\n",pitch_autocorrelation_sample(pitch_autocor[i].offset-1),
+        sprintf(s,"%u offset: %u autocor: %d", i, pitch_autocor[i].offset, pitch_autocor[i].autocor);
+        tinycl_put_string(s);
+        sprintf(s,"     %d %d %d\r\n",pitch_autocorrelation_sample(pitch_autocor[i].offset-1),
                                  pitch_autocorrelation_sample(pitch_autocor[i].offset),
                                  pitch_autocorrelation_sample(pitch_autocor[i].offset+1));
+        tinycl_put_string(s);
     }
-    printf("total us: %u\n", (uint32_t)(m-l));
+    sprintf(s,"total us: %u\r\n", (uint32_t)(m-l));
+    tinycl_put_string(s);
     pitch_buffer_reset();
     return 1;
 }
@@ -903,7 +912,8 @@ int help_cmd(int args, tinycl_parameter *tp, void *v)
 
 int main()
 {
-    stdio_init_all();
+    usb_init();    
+    //stdio_init_all();
     initialize_dsp();
     initialize_pitch();
     initialize_gpio();

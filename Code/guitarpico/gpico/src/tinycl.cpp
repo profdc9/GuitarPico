@@ -20,6 +20,7 @@ freely, subject to the following restrictions:
 
 #include "pico/stdio.h"
 #include <stdarg.h>
+#include "usbmain.h"
 #include "tinycl.h"
 
 char               tinycl_command_buffer[TINYCL_COMMAND_BUFFER+1];
@@ -32,13 +33,15 @@ bool               tinycl_do_checksum = 0;
 #ifdef RPI_PICO
 int tinycl_rppico_getchar(void *v)
 {
-  int ch = getchar_timeout_us(0);
-  return (ch == PICO_ERROR_TIMEOUT) ? -1 : ch;
+  return usb_read_character();
+//  int ch = getchar_timeout_us(0);
+//  return (ch == PICO_ERROR_TIMEOUT) ? -1 : ch;
 }
 
 void tinycl_rppico_putchar(char c,void *v)
 {
-   putchar_raw(c);
+    usb_write_char((uint8_t)c);
+   //putchar_raw(c);
 }
 tinycl_getchar tinycl_tg     = tinycl_rppico_getchar;
 void           *tinycl_tg_ptr = NULL;
