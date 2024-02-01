@@ -30,11 +30,11 @@ extern "C"
 {
 #endif
 
-#define NUM_PITCH_EDGES 64
-#define NUM_AUTOCOR_PEAKS 32
-#define NUM_AUTOCOR_PEAKS_SORT 10
+#define NUM_PITCH_EDGES 32
+#define NUM_AUTOCOR_PEAKS 64
+#define NUM_AUTOCOR_PEAKS_SORT 13
 #define PITCH_MIN_OFFSET 18
-#define EDGE_HYSTERESIS 100
+#define EDGE_HYSTERESIS (ADC_PREC_VALUE/64)
 
 typedef struct
 {
@@ -58,7 +58,8 @@ typedef struct
 void initialize_pitch(void);
 void pitch_edge_autocorrelation(void);
 int32_t pitch_autocorrelation_sample(uint32_t offset);
-int32_t pitch_estimate_peak_hz(void);
+int32_t pitch_autocorrelation_max(int32_t min_offset);
+uint32_t pitch_estimate_peak_hz(uint32_t entry);
 int32_t pitch_find_note(uint32_t freq_hz);
 
 extern const note_struct notes[];
@@ -66,29 +67,45 @@ extern const note_struct notes[];
 extern   pitch_edge pitch_edges[NUM_PITCH_EDGES];
 extern   pitch_autocor_peak pitch_autocor[NUM_AUTOCOR_PEAKS];
 
-extern volatile bool pitch_buf_reset;
 extern volatile uint pitch_current_entry;
 extern uint pitch_autocor_size;
 extern int32_t pitch_last_sample;
 extern bool pitch_current_negative;
 
+extern int32_t pitch_low_hysteresis;
+extern int32_t pitch_high_hysteresis;
+
+
 static inline void pitch_buffer_reset(void)
 {
     DMB();
-    pitch_buf_reset = 1;
-    DMB();
+    pitch_current_entry = 0;
+//    DMB();
 }
 
 static inline void insert_pitch_edge(int32_t sample, uint32_t counter)
 {
-    if (pitch_buf_reset)
+    int32_t sample_thr = sample / 2;
+    if (sample_thr > 0)
     {
-        pitch_current_entry = 0;
-        pitch_buf_reset = 0;
+        if (sample_thr > pitch_high_hysteresis)
+            pitch_high_hysteresis = sample_thr;
+    } else
+    {
+        if (sample_thr < pitch_low_hysteresis)
+            pitch_low_hysteresis = sample_thr;
     }
+    
+    pitch_low_hysteresis = (pitch_low_hysteresis * 1023) / 1024;
+    if (pitch_low_hysteresis > -EDGE_HYSTERESIS)
+        pitch_low_hysteresis = -EDGE_HYSTERESIS;
+    pitch_high_hysteresis = (pitch_high_hysteresis * 1023) / 1024;
+    if (pitch_high_hysteresis < EDGE_HYSTERESIS)
+        pitch_high_hysteresis = EDGE_HYSTERESIS;
+    
     if (pitch_current_entry < NUM_PITCH_EDGES)
     {
-        if (((!pitch_current_negative) && (sample < (-EDGE_HYSTERESIS))) || ((pitch_current_negative) && (sample > EDGE_HYSTERESIS)))
+        if (((!pitch_current_negative) && (sample < pitch_low_hysteresis)) || ((pitch_current_negative) && (sample> pitch_high_hysteresis)))
         {
             pitch_edge *p = &pitch_edges[pitch_current_entry];
             pitch_current_negative = !pitch_current_negative;

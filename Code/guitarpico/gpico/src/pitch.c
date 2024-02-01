@@ -148,6 +148,9 @@ volatile uint pitch_current_entry = 0;
 uint pitch_autocor_size = 0;
 bool pitch_current_negative = false;
 
+int32_t pitch_low_hysteresis = -EDGE_HYSTERESIS;
+int32_t pitch_high_hysteresis = EDGE_HYSTERESIS;
+
 void initialize_pitch(void)
 {
     memset((void *)pitch_edges,'\000',sizeof(pitch_edges));
@@ -157,29 +160,24 @@ void initialize_pitch(void)
     pitch_buffer_reset();
 }
 
-static inline float fitaxis(float x1, float y1, float x2, float y2, float x3, float y3)
-{
-    float y32 = y3-y2;
-    float y21 = y2-y1;
-    float y13 = y1-y3;
-    
-    return (x1*x1*y32 + x2*x2*y13 + x3*x3*y21)*0.5f/(x1*y32+x2*y13+x3*y21);
-}
-
-int32_t pitch_estimate_peak_hz(void)
+int32_t pitch_autocorrelation_max(int32_t min_offset)
 {
     int32_t autocor_max = 0;
     uint entry;
     for (uint i=0;i<pitch_autocor_size;i++)
     {
-        if ((pitch_autocor[i].offset > PITCH_MIN_OFFSET) && (pitch_autocor[i].autocor > autocor_max))
+        if ((pitch_autocor[i].offset > min_offset) && (pitch_autocor[i].autocor > autocor_max))
         {
             autocor_max = pitch_autocor[i].autocor;
             entry = i;
         }
     }
-    if (autocor_max == 0) return 0;
-    
+    if (autocor_max == 0) return -1;
+    return (int32_t)entry;
+}
+
+uint32_t pitch_estimate_peak_hz(uint32_t entry)
+{
     uint32_t offset = pitch_autocor[entry].offset;
     float y1 = pitch_autocorrelation_sample(offset-1);
     float y2 = pitch_autocor[entry].autocor;

@@ -83,10 +83,12 @@ enum
 {
   ITF_NUM_CDC_0 = 0,
   ITF_NUM_CDC_0_DATA,
+  ITF_NUM_MIDI,
+  ITF_NUM_MIDI_STREAMING,
   ITF_NUM_TOTAL
 };
 
-#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
+#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN + CFG_TUD_MIDI * TUD_MIDI_DESC_LEN)
 
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
   // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
@@ -94,6 +96,8 @@ enum
   #define EPNUM_CDC_0_NOTIF   0x81
   #define EPNUM_CDC_0_OUT     0x02
   #define EPNUM_CDC_0_IN      0x82
+  #define EPNUM_MIDI_OUT      0x05
+  #define EPNUM_MIDI_IN       0x85
 
 #elif CFG_TUSB_MCU == OPT_MCU_SAMG || CFG_TUSB_MCU ==  OPT_MCU_SAMX7X
   // SAMG & SAME70 don't support a same endpoint number with different direction IN and OUT
@@ -101,6 +105,8 @@ enum
   #define EPNUM_CDC_0_NOTIF   0x81
   #define EPNUM_CDC_0_OUT     0x02
   #define EPNUM_CDC_0_IN      0x83
+  #define EPNUM_MIDI_OUT      0x04
+  #define EPNUM_MIDI_IN       0x85
 
 #elif CFG_TUSB_MCU == OPT_MCU_FT90X || CFG_TUSB_MCU == OPT_MCU_FT93X
   // FT9XX doesn't support a same endpoint number with different direction IN and OUT
@@ -108,11 +114,15 @@ enum
   #define EPNUM_CDC_0_NOTIF   0x81
   #define EPNUM_CDC_0_OUT     0x02
   #define EPNUM_CDC_0_IN      0x83
+  #define EPNUM_MIDI_OUT      0x04
+  #define EPNUM_MIDI_IN       0x85
 
 #else
   #define EPNUM_CDC_0_NOTIF   0x81
   #define EPNUM_CDC_0_OUT     0x02
   #define EPNUM_CDC_0_IN      0x82
+  #define EPNUM_MIDI_OUT      0x03
+  #define EPNUM_MIDI_IN       0x83
 
 #endif
 
@@ -122,7 +132,10 @@ uint8_t const desc_fs_configuration[] =
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 
   // 1st CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0, 4, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
+  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0, 0, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
+  
+    // Interface number, string index, EP Out & EP In address, EP size
+  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 0, EPNUM_MIDI_OUT, EPNUM_MIDI_IN, 64)
 };
 
 #if TUD_OPT_HIGH_SPEED
@@ -135,6 +148,9 @@ uint8_t const desc_hs_configuration[] =
 
   // 1st CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0, 4, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 512),
+  
+    // Interface number, string index, EP Out & EP In address, EP size
+  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 5, EPNUM_MIDI_OUT, EPNUM_MIDI_IN, 512)
 };
 
 // device qualifier is mostly similar to device descriptor since we don't change configuration based on speed
@@ -198,10 +214,11 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 char const* string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-  "TinyUSB",                     // 1: Manufacturer
-  "TinyUSB Device",              // 2: Product
+  "GuitarPico",                  // 1: Manufacturer
+  "GuitarPico Device",           // 2: Product
   "123456",                      // 3: Serials, should use chip ID
-  "TinyUSB CDC",                 // 4: CDC Interface
+  "GuitarPico CDC",              // 4: CDC Interface
+  "GuitarPico MIDI",             // 5: CDC Interface
 };
 
 static uint16_t _desc_str[32];

@@ -72,7 +72,7 @@ macro(add_picovga project)
         ${PICOVGA_PATH}/src/font/font_thin_8x8.cpp
     )
 
-    target_link_libraries(${project} pico_stdlib hardware_pio hardware_dma pico_multicore hardware_interp hardware_pwm hardware_adc hardware_i2c hardware_flash tinyusb_device)
+    target_link_libraries(${project} pico_stdlib hardware_pio hardware_dma pico_multicore hardware_interp hardware_pwm hardware_adc hardware_i2c hardware_flash tinyusb_device tinyusb_board)
 
     include_directories(${project} ${CMAKE_CURRENT_BINARY_DIR} ${PICOVGA_PATH}/src)
 endmacro()
