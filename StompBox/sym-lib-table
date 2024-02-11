@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "StompBox")(type "KiCad")(uri "${KIPRJMOD}/StompBox.kicad_sym")(options "")(descr ""))
+)
