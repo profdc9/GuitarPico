@@ -1,12 +1,12 @@
 %TF.GenerationSoftware,KiCad,Pcbnew,(6.0.11)*%
-%TF.CreationDate,2024-01-13T13:15:40-06:00*%
+%TF.CreationDate,2024-02-24T13:07:19-06:00*%
 %TF.ProjectId,GuitarPico,47756974-6172-4506-9963-6f2e6b696361,rev?*%
 %TF.SameCoordinates,Original*%
 %TF.FileFunction,Soldermask,Top*%
 %TF.FilePolarity,Negative*%
 %FSLAX46Y46*%
 G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
-G04 Created by KiCad (PCBNEW (6.0.11)) date 2024-01-13 13:15:40*
+G04 Created by KiCad (PCBNEW (6.0.11)) date 2024-02-24 13:07:19*
 %MOMM*%
 %LPD*%
 G01*
@@ -311,9 +311,9 @@ X116560000Y-99630000D03*
 %TD*%
 D11*
 %TO.C,C7*%
-X85160000Y-72550000D03*
+X85120000Y-72275112D03*
 D10*
-X85160000Y-70050000D03*
+X85120000Y-69775112D03*
 %TD*%
 %TO.C,R11*%
 X72250000Y-93500000D03*

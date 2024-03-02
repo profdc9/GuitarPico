@@ -151,12 +151,10 @@ int32_t dsp_type_process_sin_synth(int32_t sample, dsp_unit *du)
         }
     }
     if (ct > 2)
-    {
         sine_val /= (256 * 4);
-    } else if (ct > 1)
-    {
+    else if (ct > 1)
         sine_val /= (256 * 2);
-    }
+    else sine_val /= 256;
     return sine_val;
 }
 
@@ -629,8 +627,9 @@ int32_t dsp_type_process_wah(int32_t sample, dsp_unit *du)
     if (abs(new_input - du->dtwah.pot_value1) >= POTENTIOMETER_VALUE_SENSITIVITY)
     {
         du->dtwah.pot_value1 = new_input;
+        int32_t sine_val = sine_table_entry(new_input / (POT_MAX_VALUE / (SINE_TABLE_ENTRIES / 4)));
         du->dtwah.filta1 = du->dtwah.filta1_interp1 + ((du->dtwah.filta1_interp2 - du->dtwah.filta1_interp1) * 
-                            (du->dtwah.reverse ? new_input : (POT_MAX_VALUE-1) - new_input )) / POT_MAX_VALUE;
+                            (du->dtwah.reverse ? sine_val : (QUANTIZATION_MAX - 1) - sine_val) / QUANTIZATION_MAX);
     }
     filtout =    ((int32_t)du->dtwah.filtb0) * ((int32_t)sample - (int32_t)du->dtwah.sampledly2)
                - ((int32_t)du->dtwah.filta1) * ((int32_t)du->dtwah.filtdly1)
@@ -1154,24 +1153,6 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_phaser[] =
     { NULL, 0, 4, 0, 0,   1    }
 };
 
-    dsp_unit_type  dut;
-    uint32_t source_unit;
-    uint16_t freq1, freq2;
-    uint16_t Q;
-    uint32_t frequency;
-    uint32_t mixval;
-    uint32_t stages;
-    uint32_t last_frequency;
-    uint16_t last_freq1, last_freq2;
-    uint16_t last_Q;
-    int32_t filta1_interp1;
-    int32_t filta1_interp2;
-    int32_t filta1;
-    int32_t filta2;
-    uint32_t sine_counter;
-    uint32_t sine_counter_inc;
-    uint32_t control_number1;
-    uint32_t pot_value1;
 
 const dsp_type_phaser dsp_type_phaser_default = { 0, 0, 300, 600, 200, 60, 128, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 { 0, 0, 0, 0, 0, 0, 0, 0 },      { 0, 0, 0, 0, 0, 0, 0, 0 },     { 0, 0, 0, 0, 0, 0, 0, 0 },     { 0, 0, 0, 0, 0, 0, 0, 0 } };

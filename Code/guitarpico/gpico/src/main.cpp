@@ -583,76 +583,90 @@ void flash_save(void)
     message_to_display(flash_save_bank(bankno-1) ? "Save Failed" : "Save Succeeded");      
 }
 
+bool pitch_poll(bool do_play_note, uint32_t *hz, int32_t *note_no)
+{
+    static uint32_t mag_note_thr = 0;
+    static bool playing_note = false;
+    static bool another_note = true;
+    static int32_t min_offset = PITCH_MIN_OFFSET;
+   
+    uint32_t cur_mag_avg = mag_avg;
+    bool note_event = false;
+    
+    if (pitch_current_entry >= NUM_PITCH_EDGES)
+    {
+        pitch_edge_autocorrelation();
+        pitch_buffer_reset();
+        int32_t entry = pitch_autocorrelation_max(min_offset);
+        if (entry >= 0)
+        {
+            uint32_t hzn = pitch_estimate_peak_hz(entry);
+            if (hzn > 0)
+            {
+                min_offset = pitch_autocor[entry].offset / 2;
+                int32_t note_no_n = pitch_find_note(hzn);
+                if ((note_no_n >= 0) && (another_note))
+                {
+                    *note_no = note_no_n;
+                    mag_note_thr = cur_mag_avg*3/4;
+                    *hz = hzn;
+                    note_event = true;
+                    if (do_play_note)
+                    {
+                        gpio_put(LED_PIN, 1);
+                        uint32_t velocity = cur_mag_avg / (16 * ADC_PREC_VALUE / 128);
+                        if (velocity > 127) velocity = 127;
+                        midi_send_note(note_no_n+24, velocity);
+                    }
+                    playing_note = true;
+                    another_note = false;
+                }
+            }
+        }
+    }
+    if (cur_mag_avg < mag_note_thr) 
+        another_note = true;
+    if (cur_mag_avg < (512*40))
+    {
+        min_offset = PITCH_MIN_OFFSET;
+        //pitch_buffer_reset();
+        if (playing_note)
+        {
+            note_event = true;
+            if (do_play_note) 
+            {
+               gpio_put(LED_PIN, 0);
+               midi_send_note(0,0);
+            }
+            playing_note = false;
+            another_note = true;
+            mag_note_thr = 0;
+        }
+    }    
+    return note_event;
+}
+
 void pitch_measure(void)
 {
 
     char str[80];
     bool endloop = false;
-    uint32_t last_time = 0;
-
-    uint32_t hz = 0;
+    uint32_t last_time = 0, hz = 0;
     int32_t note_no = -1;
-    uint32_t mag_note_thr = 0;
-    bool playing_note = false;
-    bool another_note = true;
-    
+  
     clear_display();
     pitch_buffer_reset();
     buttons_clear();
-    int32_t min_offset = PITCH_MIN_OFFSET;
     
     while (!endloop)
     {
         idle_task();
-        uint32_t cur_mag_avg = mag_avg;
-        if (pitch_current_entry >= NUM_PITCH_EDGES)
-        {
-            pitch_edge_autocorrelation();
-            pitch_buffer_reset();
-            int32_t entry = pitch_autocorrelation_max(min_offset);
-            if (entry >= 0)
-            {
-                uint32_t hzn = pitch_estimate_peak_hz(entry);
-                if (hzn > 0)
-                {
-                    min_offset = pitch_autocor[entry].offset / 2;
-                    int32_t note_no_n = pitch_find_note(hzn);
-                    if ((note_no_n >= 0) && (another_note))
-                    {
-                        mag_note_thr = cur_mag_avg*3/4;
-                        note_no = note_no_n;
-                        hz = hzn;
-                        uint32_t velocity = cur_mag_avg / (4* ADC_PREC_VALUE / 128);
-                        if (velocity > 127) velocity = 127;
-                        gpio_put(LED_PIN, 1);
-                        midi_send_note(note_no+24, velocity);
-                        usb_task();
-                        playing_note = true;
-                        another_note = false;
-                    }
-                }
-            }
-        }
-        if (cur_mag_avg < mag_note_thr) another_note = true;
-        if (mag_avg < (512*40))
-        {
-            min_offset = PITCH_MIN_OFFSET;
-            gpio_put(LED_PIN, 0);
-            //pitch_buffer_reset();
-            if (playing_note)
-            {
-                midi_send_note(0,0);
-                usb_task();
-                playing_note = false;
-                another_note = true;
-                mag_note_thr = 0;
-            }
-        } 
         if (button_enter() || button_left()) 
         {
             endloop = true;
             break;
         }
+        pitch_poll(true, &hz, &note_no);
         if ((time_us_32() - last_time) > 250000)
         {
             last_time = time_us_32();
@@ -660,8 +674,6 @@ void pitch_measure(void)
             write_str_with_spaces(0,0,str,16);
             sprintf(str,"Nt: %s %u", note_no < 0 ? "None" : notes[note_no].note, note_no < 0 ? 0 : notes[note_no].frequency_hz);
             write_str_with_spaces(0,1,str,16);
-            sprintf(str,"Mag: %u %u",mag_avg,mag_note_thr);
-            write_str_with_spaces(0,3,str,16);
             display_refresh();
         }
     }
