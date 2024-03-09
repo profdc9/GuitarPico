@@ -101,6 +101,7 @@ typedef enum
     DSP_TYPE_PHASER,
     DSP_TYPE_BACKWARDS,
     DSP_TYPE_PITCHSHIFT,
+    DSP_TYPE_WHAMMY,
     DSP_TYPE_OCTAVE,
     DSP_TYPE_SINE_SYNTH,
     DSP_TYPE_MAX_ENTRY
@@ -504,6 +505,30 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
+    int32_t whammy_samples;
+    uint32_t whammy_adj;
+    uint32_t whammy_sign;
+    uint32_t whammy_rate;
+    int32_t  samples_count;
+
+    uint32_t control_number3;
+    uint32_t pot_value3;
+
+    int32_t whammy_samples_2;
+    int32_t whammy_samples_12;
+    int32_t whammy_samples_32;
+    int32_t whammy_samples_4096;
+    int32_t whammy_samples_8192;
+    int32_t whammy_samples_scale;
+    
+    uint32_t last_whammy_samples;
+    int32_t  last_sample;
+} dsp_type_whammy;
+
+typedef struct
+{
+    dsp_unit_type  dut;
+    uint32_t source_unit;
     uint32_t rectify;
     uint32_t multiplier;
     int32_t  sample_avg;
@@ -536,6 +561,7 @@ typedef union
     dsp_type_phaser       dtphaser;
     dsp_type_backwards    dtback;
     dsp_type_pitchshift   dtpitch;
+    dsp_type_whammy       dtwhammy;
     dsp_type_octave       dtoct;
 } dsp_unit;
 

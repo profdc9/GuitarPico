@@ -1289,6 +1289,73 @@ const dsp_type_configuration_entry dsp_type_configuration_entry_pitchshift[] =
 
 const dsp_type_pitchshift dsp_type_pitchshift_default = { 0, 0, 800, 4096, 255, 2000, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
+/************************************DSP_TYPE_WHAMMY*********************************/
+
+int32_t dsp_type_process_whammy(int32_t sample, dsp_unit *du)
+{
+    uint32_t new_input = read_potentiometer_value(du->dtwhammy.control_number3);
+    if (abs(new_input - du->dtwhammy.pot_value3) >= POTENTIOMETER_VALUE_SENSITIVITY)
+    {
+        du->dtwhammy.pot_value3 = new_input;
+        if (du->dtwhammy.whammy_sign)
+            du->dtwhammy.whammy_rate = 4096 - (du->dtwhammy.pot_value3 * du->dtwhammy.whammy_adj) / POT_MAX_VALUE;
+        else
+            du->dtwhammy.whammy_rate = 4096 + (du->dtwhammy.pot_value3 * du->dtwhammy.whammy_adj) / POT_MAX_VALUE;
+    }
+    if (du->dtwhammy.whammy_samples != du->dtwhammy.last_whammy_samples)
+    {
+        du->dtwhammy.last_whammy_samples = du->dtwhammy.whammy_samples;
+        du->dtwhammy.whammy_samples_2 = du->dtwhammy.whammy_samples * 2;
+        du->dtwhammy.whammy_samples_12 = du->dtwhammy.whammy_samples / 2;
+        du->dtwhammy.whammy_samples_32 = du->dtwhammy.whammy_samples * 3 / 2;
+        du->dtwhammy.whammy_samples_4096 = du->dtwhammy.whammy_samples * 4096;
+        du->dtwhammy.whammy_samples_8192 = du->dtwhammy.whammy_samples * 8192;
+        du->dtwhammy.whammy_samples_scale = 32768 / du->dtwhammy.whammy_samples;
+        du->dtwhammy.samples_count = du->dtwhammy.whammy_samples_4096;
+    }
+    du->dtwhammy.samples_count += (4096 - ((int32_t)du->dtwhammy.whammy_rate));
+    if (du->dtwhammy.samples_count < 0)  du->dtwhammy.samples_count += du->dtwhammy.whammy_samples_4096;
+    if (du->dtwhammy.samples_count >= du->dtwhammy.whammy_samples_8192) du->dtwhammy.samples_count -= du->dtwhammy.whammy_samples_4096;
+    int32_t current_sample = du->dtwhammy.samples_count / 4096, val;
+    if (current_sample < du->dtwhammy.whammy_samples_12)
+    {
+        val = ((sample_circ_buf_clean_value(current_sample)*current_sample + 
+               sample_circ_buf_clean_value(current_sample + du->dtwhammy.whammy_samples_12)*(du->dtwhammy.whammy_samples_12 - current_sample))*
+               du->dtwhammy.whammy_samples_scale) / 16384;
+    } else if (current_sample < du->dtwhammy.whammy_samples)
+    {
+        val = ((sample_circ_buf_clean_value(current_sample)*(du->dtwhammy.whammy_samples - current_sample) + 
+               sample_circ_buf_clean_value(current_sample - du->dtwhammy.whammy_samples_12)*(current_sample - du->dtwhammy.whammy_samples_12))*
+               du->dtwhammy.whammy_samples_scale) / 16384;
+    } else if (current_sample < du->dtwhammy.whammy_samples_32)
+    {
+        val = ((sample_circ_buf_clean_value(current_sample)*(current_sample - du->dtwhammy.whammy_samples) + 
+               sample_circ_buf_clean_value(current_sample + du->dtwhammy.whammy_samples_12)*(du->dtwhammy.whammy_samples_32 - current_sample))*
+               du->dtwhammy.whammy_samples_scale) / 16384;
+    } else
+    {
+        val = ((sample_circ_buf_clean_value(current_sample)*(du->dtwhammy.whammy_samples_2 - current_sample) + 
+               sample_circ_buf_clean_value(current_sample - du->dtwhammy.whammy_samples_12)*(current_sample - du->dtwhammy.whammy_samples_32))*
+               du->dtwhammy.whammy_samples_scale) / 16384;
+    }
+    if (val > (ADC_PREC_VALUE/2-1)) val=ADC_PREC_VALUE/2-1;
+    if (val < (-ADC_PREC_VALUE/2)) val=-ADC_PREC_VALUE/2;
+    
+    return val;
+}
+
+const dsp_type_configuration_entry dsp_type_configuration_entry_whammy[] = 
+{
+    { "Samples",    offsetof(dsp_type_whammy,whammy_samples),   4, 5, 1, 2048 },
+    { "Adjust",     offsetof(dsp_type_whammy,whammy_adj),       4, 5, 1, 4000 },
+    { "UpOrDown",   offsetof(dsp_type_whammy,whammy_sign),      4, 1, 0, 1 },
+    { "AdjCtrl",    offsetof(dsp_type_whammy,control_number3),  4, 1, 0, 6 },
+    { "SourceUnit", offsetof(dsp_type_whammy,source_unit),     4, 2, 1, MAX_DSP_UNITS },
+    { NULL, 0, 4, 0, 0,   1    }
+};
+
+const dsp_type_whammy dsp_type_whammy_default = { 0, 0, 800, 128, 0, 4096, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 /************************************DSP_TYPE_OCTAVE*********************************/
 
 int32_t dsp_type_process_octave(int32_t sample, dsp_unit *du)
@@ -1362,6 +1429,7 @@ const char * const dtnames[] =
     "Phaser",
     "Backwards",
     "PitchShift",
+    "Whammy",
     "Octave",
     "Sin Synth",
     NULL
@@ -1392,6 +1460,7 @@ const dsp_type_configuration_entry * const dtce[] =
     dsp_type_configuration_entry_phaser, 
     dsp_type_configuration_entry_backwards, 
     dsp_type_configuration_entry_pitchshift, 
+    dsp_type_configuration_entry_whammy, 
     dsp_type_configuration_entry_octave, 
     dsp_type_configuration_entry_sin_synth, 
     NULL
@@ -1421,6 +1490,7 @@ dsp_type_process * const dtp[] = {
     dsp_type_process_phaser,
     dsp_type_process_backwards,
     dsp_type_process_pitchshift,
+    dsp_type_process_whammy,
     dsp_type_process_octave,
     dsp_type_process_sin_synth,
 };
@@ -1450,6 +1520,7 @@ const void * const dsp_unit_struct_defaults[] =
     (void *) &dsp_type_phaser_default,
     (void *) &dsp_type_backwards_default,
     (void *) &dsp_type_pitchshift_default,
+    (void *) &dsp_type_whammy_default,
     (void *) &dsp_type_octave_default,
     (void *) &dsp_type_sine_synth_default
 };
