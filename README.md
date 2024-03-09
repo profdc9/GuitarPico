@@ -24,7 +24,7 @@ It includes the following effects:
 16.  Compressor (amplifies weak signals to equal out overall amplitude of signal)
 17.  Ring (ring modulator using low frequency oscillator)
 18.  Flanger (pitch modulated by a low frequency oscillator, with feedback and combined with unmodulated signal)
-19   Chorus (pitch modulated by a low frequency oscillator, no feedback and combined with unmodulated signal)
+19.   Chorus (pitch modulated by a low frequency oscillator, no feedback and combined with unmodulated signal)
 20.  Phaser (signal run through multiple stages of all pass filters, combined with unmodulated signal)
 21.  Backwards (plays the last samples backwards for weird swooping effect)
 22.  PitchShift (allows shifting the pitch by variable amounts, useful for harmony-like effect)
