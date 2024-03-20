@@ -47,5 +47,6 @@ There is also a VGA port that will be used to implement video effects.
 The hardware is licensed under CC-BY-SA 4.0 and software under the zlib license, both open source licenses.
 
 ![Picture](Pics/GuitarPicoPic.jpg)
+![Picture](Pics/StompBox.jpg)
 ![Picture](GuitarPico/GuitarPico.png)
 

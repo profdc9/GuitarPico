@@ -400,12 +400,14 @@ int main2();
 #define FLASH_PAGE_BYTES 4096u
 #define FLASH_OFFSET_STORED (2*1024*1024)
 #define FLASH_BASE_ADR 0x10000000
-#define FLASH_MAGIC_NUMBER 0xFEEDEEFD
+#define FLASH_MAGIC_NUMBER 0xFEECFEDE
 
 #define FLASH_PAGES(x) ((((x)+(FLASH_PAGE_BYTES-1))/FLASH_PAGE_BYTES)*FLASH_PAGE_BYTES)
 
 uint32_t last_gen_no;
 uint8_t  desc[16];
+uint32_t pedal_onoff = 0;
+uint8_t  pedal_control[4] = { 1, 2, 3, 4 };
 
 typedef struct _flash_layout_data
 {
@@ -461,9 +463,8 @@ int write_data_to_flash(uint32_t flash_offset, const uint8_t *data, uint core, u
     return 0;
 }
 
-uint select_bankno(void)
+uint select_bankno(uint bankno)
 {
-    uint bankno = 1;
     bool notend = true;
     
     while (notend)
@@ -499,6 +500,50 @@ uint select_bankno(void)
     return bankno;
 }
 
+const char * const pedalmenu[] = { "Turn Pedal Off", "Turn Pedal On", NULL };
+
+menu_str pedalmenu_str = { pedalmenu, 0, 2, 15, 0, 0 };
+
+void pedal_control_cmd()
+{
+  uint val;
+  pedalmenu_str.item  = pedal_onoff;
+  do_show_menu_item(&pedalmenu_str);
+  buttons_clear();
+  for (;;)
+  {
+      idle_task();
+      val = do_menu(&pedalmenu_str);
+      if (val != 0) break;
+  } 
+  if (val == 1) return;
+  pedal_onoff = pedalmenu_str.item;
+  if (pedal_onoff == 0) return;
+
+  for (uint i=0;i<(sizeof(pedal_control)/sizeof(pedal_control[0]));i++)
+  {
+     char s[20];
+     sprintf(s,"Pedal Button %u",i+1);
+     write_str_with_spaces(0,2,s,16);
+     pedal_control[i] = select_bankno(pedal_control[i]);
+  }
+}
+
+#define PEDAL_SWITCH_INPUT 6
+
+static uint pedal_current_state = 0;
+static uint pedal_wait_state = 0;
+static uint pedal_current_count = 0;
+
+void pedal_display_state(void)
+{
+    if (!pedal_onoff) return;
+    write_str(0,7,pedal_current_state == 1 ? "\001\001\001" : "\002\002\002" );
+    write_str(4,7,pedal_current_state == 2 ? "\001\001\001" : "\002\002\002" );
+    write_str(8,7,pedal_current_state == 3 ? "\001\001\001" : "\002\002\002" );
+    write_str(12,7,pedal_current_state == 4 ? "\001\001\001" : "\002\002\002" );
+}
+
 int flash_load_bank(uint bankno)
 {
     flash_layout *fl = (flash_layout *) flash_offset_address_bank(bankno);
@@ -508,16 +553,63 @@ int flash_load_bank(uint bankno)
     {
         if (fl->fld.gen_no > last_gen_no)
             last_gen_no = fl->fld.gen_no;
-        memcpy((void *)dsp_units, (void *) &fl->fld.dsp_units, sizeof(dsp_units));
         memcpy(desc, fl->fld.desc, sizeof(desc));
+        memcpy((void *)dsp_units, (void *) &fl->fld.dsp_units, sizeof(dsp_units));
+        dsp_unit_reset_all();
     } else return -1;
     return 0;
+}
+
+void pedal_switch(void)
+{
+    static uint32_t last_us;
+    uint32_t current_us = time_us_32();
+
+    if ((current_us - last_us) < 5000) return;
+    last_us = current_us;
+
+    if (!pedal_onoff) return;
+
+    uint val = read_potentiometer_value(PEDAL_SWITCH_INPUT);
+    uint state = 0;
+
+    if ((val>=(POT_MAX_VALUE*2/16)) && (val<(POT_MAX_VALUE*4/16))) state = 1;
+    if ((val>=(POT_MAX_VALUE*4/16)) && (val<(POT_MAX_VALUE*6/16))) state = 2;
+    if ((val>=(POT_MAX_VALUE*7/16)) && (val<(POT_MAX_VALUE*9/16))) state = 3;
+    if ((val>=(POT_MAX_VALUE*10/16)) && (val<(POT_MAX_VALUE*12/16))) state = 4;
+
+    if (pedal_wait_state != state)
+    {
+        pedal_wait_state = state;
+        pedal_current_count = 0;
+        return;
+    } 
+    if (pedal_current_count == 11)
+        return;
+    if (pedal_current_count == 10)
+    {
+        pedal_current_state = pedal_wait_state;
+        pedal_display_state();
+        if (pedal_current_state > 0)
+        {
+            if (flash_load_bank(pedal_control[pedal_current_state-1]-1) == 0)
+            {
+                char s[20];
+                sprintf(s,"Bank loaded %02u",pedal_control[pedal_current_state-1]);
+                write_str_with_spaces(0,5,s,16);
+            } else
+                write_str_with_spaces(0,5,"Bank NOT loaded",16);
+        } 
+        set_cursor(15,5);
+        display_refresh();
+    }
+    pedal_current_count++;
 }
 
 int flash_load(void)
 {
     uint bankno;
-    if ((bankno = select_bankno()) == 0) return -1;
+    if ((bankno = select_bankno(1)) == 0) return -1;
     message_to_display(flash_load_bank(bankno-1) ? "Not Loaded" : "Loaded");
     return 0;
 }
@@ -569,7 +661,7 @@ void flash_save(void)
     uint bankno;
     scroll_alpha_dat sad = { 0, 5, sizeof(desc)-1, sizeof(desc)-1, desc, validchars, sizeof(validchars), 0, 0, 0, 0, 0 };
 
-    if ((bankno = select_bankno()) == 0) return;
+    if ((bankno = select_bankno(1)) == 0) return;
     write_str_with_spaces(0,4,"Description:",15);
     scroll_alpha_start(&sad);
     for (;;)
@@ -709,7 +801,7 @@ void debugstuff(void)
         sprintf(str,"c1: %u %u %u",control_samples[0],control_samples[1],control_samples[2]);
         ssd1306_set_cursor(0,2);
         ssd1306_printstring(str);
-        sprintf(str,"c2: %u %u %u",control_samples[3],control_samples[4],control_samples[5]);
+        sprintf(str,"c2: %u %u %u",control_samples[3],control_samples[4],control_samples[6]);
         ssd1306_set_cursor(0,3);
         ssd1306_printstring(str);
         sprintf(str,"buf: %d",sample_circ_buf_value(0));
@@ -722,7 +814,7 @@ void debugstuff(void)
     }
 }
 
-const char * const mainmenu[] = { "Adjust", "Pitch", "Debug", "Load", "Save", NULL };
+const char * const mainmenu[] = { "Adjust", "Pitch", "Debug", "Pedal", "Load", "Save", NULL };
 
 menu_str mainmenu_str = { mainmenu, 0, 2, 15, 0, 0 };
 
@@ -739,7 +831,7 @@ void type_cmd_write(uint unit_no, dsp_unit_type dut)
 {
   char s[40];
   if (dut >= DSP_TYPE_MAX_ENTRY) return;
-  sprintf(s,"TYPE %u %u ",unit_no+1, (uint)dut);
+  sprintf(s,"INIT %u %u ",unit_no+1, (uint)dut);
   tinycl_put_string(s);
   tinycl_put_string(dtnames[(uint)dut]);
   tinycl_put_string("\r\n");    
@@ -987,6 +1079,7 @@ int main()
         clear_display();
         write_str(0,0,"GuitarPico");
         write_str_with_spaces(0,1,(char *)desc,15);
+        pedal_display_state();
         do_show_menu_item(&mainmenu_str);
         buttons_clear();
         for (;;)
@@ -996,6 +1089,7 @@ int main()
                 tinycl_do_echo = 1;
                 tinycl_put_string("> ");
             }
+            pedal_switch();
             idle_task();
             uint val = do_menu(&mainmenu_str);
             if ((val == 2) || (val == 3)) break;
@@ -1008,9 +1102,11 @@ int main()
                      break;
             case 2:  debugstuff();
                      break;
-            case 3:  flash_load();
+            case 3:  pedal_control_cmd();
                      break;
-            case 4:  flash_save();
+            case 4:  flash_load();
+                     break;
+            case 5:  flash_save();
                      break;
         }
     }
