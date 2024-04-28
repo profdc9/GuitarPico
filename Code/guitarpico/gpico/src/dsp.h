@@ -111,6 +111,11 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
+} dsp_parm_none;
+
+typedef struct
+{
+    uint32_t notused;
 } dsp_type_none;
 
 typedef struct
@@ -120,12 +125,16 @@ typedef struct
     uint32_t mixval;
     uint32_t frequency[3];
     uint32_t amplitude[3];
+    uint32_t control_number1;
+    uint32_t control_number2;
+} dsp_parm_sine_synth;
+
+typedef struct
+{
     uint32_t last_frequency[3];
     uint32_t sine_counter[3];
     uint32_t sine_counter_inc[3];
-    uint32_t control_number1;
     uint32_t pot_value1;
-    uint32_t control_number2;
     uint32_t pot_value2;
 } dsp_type_sine_synth;
 
@@ -135,8 +144,12 @@ typedef struct
     uint32_t source_unit;
     uint32_t threshold;
     uint32_t response;
-    uint32_t envelope;
     uint32_t control_number1;
+} dsp_parm_noisegate;
+
+typedef struct
+{
+    uint32_t envelope;
     uint32_t pot_value1;
 } dsp_type_noisegate;
 
@@ -147,8 +160,13 @@ typedef struct
     uint32_t delay_samples;
     uint32_t echo_reduction;
     uint32_t control_number1;
-    uint32_t pot_value1;
     uint32_t control_number2;
+} dsp_parm_delay;
+
+typedef struct
+{
+    uint32_t notused;
+    uint32_t pot_value1;
     uint32_t pot_value2;
 } dsp_type_delay;
 
@@ -158,6 +176,11 @@ typedef struct
     uint32_t source_unit;
     uint32_t delay_samples[3];
     uint32_t amplitude[3];
+} dsp_parm_room;
+
+typedef struct
+{
+    uint32_t notused;
 } dsp_type_room;
 
 typedef struct
@@ -168,6 +191,11 @@ typedef struct
     uint32_t unit[3];
     uint32_t amplitude[3];
     uint32_t signbit[3];
+} dsp_parm_combine;
+
+typedef struct
+{
+    uint32_t notused;
 } dsp_type_combine;
 
 typedef struct
@@ -177,6 +205,10 @@ typedef struct
     uint16_t frequency;
     uint16_t Q;
     uint32_t control_number1;
+} dsp_parm_bandpass;
+
+typedef struct
+{
     uint32_t pot_value1;
     uint16_t last_frequency;
     uint16_t last_Q;
@@ -193,6 +225,10 @@ typedef struct
     uint16_t frequency;
     uint16_t Q;
     uint32_t control_number1;
+} dsp_parm_lowpass;
+
+typedef struct
+{
     uint32_t pot_value1;
     uint16_t last_frequency;
     uint16_t last_Q;
@@ -210,6 +246,10 @@ typedef struct
     uint16_t frequency;
     uint16_t Q;
     uint32_t control_number1;
+} dsp_parm_highpass;
+
+typedef struct
+{
     uint32_t pot_value1;
     uint16_t last_frequency;
     uint16_t last_Q;
@@ -227,6 +267,10 @@ typedef struct
     uint16_t frequency;
     uint16_t Q;
     uint32_t control_number1;
+} dsp_parm_allpass;
+
+typedef struct
+{
     uint32_t pot_value1;
     uint16_t last_frequency;
     uint16_t last_Q;
@@ -239,15 +283,19 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
+    uint32_t frequency;
+    uint32_t modulation;
+    uint32_t control_number1;
+    uint32_t control_number2;
+} dsp_parm_tremolo;
+
+typedef struct
+{
     uint32_t sine_counter;
     uint32_t sine_counter_inc;
-    uint32_t frequency;
     uint32_t last_frequency;
-    uint32_t modulation;
     uint32_t last_modulation;
-    uint32_t control_number1;
     uint32_t pot_value1;
-    uint32_t control_number2;
     uint32_t pot_value2;
 } dsp_type_tremolo;
 
@@ -255,16 +303,20 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
-    uint32_t sine_counter;
-    uint32_t sine_counter_inc;
     uint32_t delay_samples;
     uint32_t frequency;
-    uint32_t last_frequency;
     uint32_t modulation;
-    uint32_t last_modulation;
     uint32_t control_number1;
-    uint32_t pot_value1;
     uint32_t control_number2;
+} dsp_parm_vibrato;
+
+typedef struct
+{
+    uint32_t sine_counter;
+    uint32_t sine_counter_inc;
+    uint32_t last_frequency;
+    uint32_t last_modulation;
+    uint32_t pot_value1;
     uint32_t pot_value2;
 } dsp_type_vibrato;
 
@@ -276,6 +328,10 @@ typedef struct
     uint16_t Q;
     uint32_t reverse;
     uint32_t control_number1;
+} dsp_parm_wah;
+
+typedef struct
+{
     uint32_t pot_value1;
     uint16_t last_freq1, last_freq2;
     uint16_t last_Q;
@@ -295,6 +351,10 @@ typedef struct
     uint16_t Q;
     uint32_t frequency;
     uint32_t control_number1;
+} dsp_parm_autowah;
+
+typedef struct
+{
     uint32_t pot_value1;
     uint16_t last_freq1, last_freq2;
     uint16_t last_Q;
@@ -318,6 +378,10 @@ typedef struct
     uint32_t response;
     uint32_t sensitivity;
     uint32_t reverse;
+} dsp_parm_envelope;
+
+typedef struct
+{
     uint16_t last_freq1, last_freq2;
     uint16_t last_Q;
     int32_t filtb0;
@@ -336,12 +400,16 @@ typedef struct
     int32_t gain;
     uint32_t noise_gate;
     uint32_t sample_offset;
+    uint32_t control_number1;
+} dsp_parm_distortion;
+
+typedef struct
+{
     uint32_t last_noise_gate;
     uint32_t last_sample_offset;
     int32_t low_threshold;
     int32_t high_threshold;
     int32_t offset_value;
-    uint32_t control_number1;
     uint32_t pot_value1;
 } dsp_type_distortion;
 
@@ -351,14 +419,18 @@ typedef struct
     uint32_t source_unit;
     uint32_t threshold;
     uint32_t amplitude;
+    uint32_t control_number1;
+    uint32_t control_number2;
+} dsp_parm_overdrive;
+
+typedef struct
+{
     uint32_t last_threshold, last_amplitude;
     int32_t  x0;
     int32_t  y0;
     int32_t  y0x0;
     int32_t  y01;
-    uint32_t control_number1;
     uint32_t pot_value1;
-    uint32_t control_number2;
     uint32_t pot_value2;
 } dsp_type_overdrive;
 
@@ -370,11 +442,15 @@ typedef struct
     int32_t  attack_threshold;
     uint32_t release;
     int32_t  release_threshold;
+    uint32_t control_number1;
+    uint32_t control_number2;
+} dsp_parm_compressor;
+
+typedef struct
+{
     int32_t  gain, level, nlevel;
     uint32_t skip;
-    uint32_t control_number1;
     uint32_t pot_value1;
-    uint32_t control_number2;
     uint32_t pot_value2;
 } dsp_type_compressor;
 
@@ -382,12 +458,16 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
-    uint32_t sine_counter;
-    uint32_t sine_counter_inc;
     uint32_t frequency;
     uint32_t sine_mix;
-    uint32_t last_frequency;
     uint32_t control_number1;
+} dsp_parm_ring;
+
+typedef struct
+{
+    uint32_t sine_counter;
+    uint32_t sine_counter_inc;
+    uint32_t last_frequency;
     uint32_t pot_value1;
 } dsp_type_ring;
 
@@ -395,17 +475,21 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
-    uint32_t sine_counter;
-    uint32_t sine_counter_inc;
-    uint32_t delay_samples;
     uint32_t frequency;
-    uint32_t last_frequency;
     uint32_t modulation;
-    uint32_t last_modulation;
+    uint32_t delay_samples;
     uint32_t feedback;
     uint32_t control_number1;
-    uint32_t pot_value1;
     uint32_t control_number2;
+} dsp_parm_flange;
+
+typedef struct
+{
+    uint32_t sine_counter;
+    uint32_t sine_counter_inc;
+    uint32_t last_frequency;
+    uint32_t last_modulation;
+    uint32_t pot_value1;
     uint32_t pot_value2;
 } dsp_type_flange;
 
@@ -413,17 +497,21 @@ typedef struct
 {
     dsp_unit_type  dut;
     uint32_t source_unit;
-    uint32_t sine_counter;
-    uint32_t sine_counter_inc;
     uint32_t delay_samples;
     uint32_t frequency;
-    uint32_t last_frequency;
     uint32_t modulation;
-    uint32_t last_modulation;
     uint32_t mixval;
     uint32_t control_number1;
-    uint32_t pot_value1;
     uint32_t control_number2;
+} dsp_parm_chorus;
+
+typedef struct
+{
+    uint32_t sine_counter;
+    uint32_t sine_counter_inc;
+    uint32_t last_frequency;
+    uint32_t last_modulation;
+    uint32_t pot_value1;
     uint32_t pot_value2;
 } dsp_type_chorus;
 
@@ -438,6 +526,11 @@ typedef struct
     uint32_t frequency;
     uint32_t mixval;
     uint32_t stages;
+    uint32_t control_number1;
+} dsp_parm_phaser;
+
+typedef struct
+{
     uint32_t last_frequency;
     uint16_t last_freq1, last_freq2;
     uint16_t last_Q;
@@ -447,7 +540,6 @@ typedef struct
     int32_t filta2;
     uint32_t sine_counter;
     uint32_t sine_counter_inc;
-    uint32_t control_number1;
     uint32_t pot_value1;
     int32_t sampledly1[PHASER_STAGES], sampledly2[PHASER_STAGES], filtdly1[PHASER_STAGES], filtdly2[PHASER_STAGES];
 } dsp_type_phaser;
@@ -458,10 +550,14 @@ typedef struct
     uint32_t source_unit;
     uint32_t backwards_samples;
     uint32_t balance;
-    uint32_t samples_count;
     uint32_t control_number1;
-    uint32_t pot_value1;
     uint32_t control_number2;
+} dsp_parm_backwards;
+
+typedef struct
+{
+    uint32_t samples_count;
+    uint32_t pot_value1;
     uint32_t pot_value2;
 } dsp_type_backwards;
 
@@ -474,11 +570,15 @@ typedef struct
     uint32_t balance;
     uint32_t frequency;
     uint32_t Q;
+    uint32_t control_number3;
+    uint32_t control_number2;
+} dsp_parm_pitchshift;
+
+typedef struct
+{
     int32_t  samples_count;
 
-    uint32_t control_number2;
     uint32_t pot_value2;
-    uint32_t control_number3;
     uint32_t pot_value3;
 
     int32_t pitchshift_samples_2;
@@ -486,9 +586,9 @@ typedef struct
     int32_t pitchshift_samples_32;
     int32_t pitchshift_samples_4096;
     int32_t pitchshift_samples_8192;
-    int32_t  pitchshift_samples_scale;
+    int32_t pitchshift_samples_scale;
     
-    uint32_t last_pitchshift_samples;
+    int32_t pitchshift_samples;
     int32_t  last_sample;
     uint32_t last_frequency;
     uint32_t last_Q;
@@ -498,7 +598,6 @@ typedef struct
     int32_t filta1;
     int32_t filta2;
     int32_t sampledly1, sampledly2, filtdly1, filtdly2;
-
 } dsp_type_pitchshift;
 
 typedef struct
@@ -508,11 +607,15 @@ typedef struct
     int32_t whammy_samples;
     uint32_t whammy_adj;
     uint32_t whammy_sign;
-    uint32_t whammy_rate;
+    uint32_t control_number3;
+} dsp_parm_whammy;
+
+typedef struct
+{
     int32_t  samples_count;
 
-    uint32_t control_number3;
     uint32_t pot_value3;
+    uint32_t whammy_rate;
 
     int32_t whammy_samples_2;
     int32_t whammy_samples_12;
@@ -521,7 +624,7 @@ typedef struct
     int32_t whammy_samples_8192;
     int32_t whammy_samples_scale;
     
-    uint32_t last_whammy_samples;
+    int32_t whammy_samples;
     int32_t  last_sample;
 } dsp_type_whammy;
 
@@ -531,6 +634,10 @@ typedef struct
     uint32_t source_unit;
     uint32_t rectify;
     uint32_t multiplier;
+} dsp_parm_octave;
+
+typedef struct
+{
     int32_t  sample_avg;
     int32_t  sample_avg2;
 } dsp_type_octave;
@@ -565,19 +672,55 @@ typedef union
     dsp_type_octave       dtoct;
 } dsp_unit;
 
+typedef union 
+{
+    dsp_parm_none         dtn;
+    dsp_parm_sine_synth   dtss;
+    dsp_parm_noisegate    dtnoise;
+    dsp_parm_delay        dtd;
+    dsp_parm_room         dtroom;
+    dsp_parm_combine      dtcombine;
+    dsp_parm_bandpass     dtbp;
+    dsp_parm_lowpass      dtlp;
+    dsp_parm_highpass     dthp;
+    dsp_parm_allpass      dtap;
+    dsp_parm_tremolo      dttrem;
+    dsp_parm_vibrato      dtvibr;
+    dsp_parm_wah          dtwah;
+    dsp_parm_autowah      dtautowah;
+    dsp_parm_envelope     dtenv;
+    dsp_parm_distortion   dtdist;
+    dsp_parm_overdrive    dtovr;
+    dsp_parm_compressor   dtcomp;
+    dsp_parm_ring         dtring;
+    dsp_parm_flange       dtflng;
+    dsp_parm_chorus       dtchor;
+    dsp_parm_phaser       dtphaser;
+    dsp_parm_backwards    dtback;
+    dsp_parm_pitchshift   dtpitch;
+    dsp_parm_whammy       dtwhammy;
+    dsp_parm_octave       dtoct;
+} dsp_parm;
+
 typedef bool    (dsp_type_initialize)(void *initialization_data, dsp_unit *du);
-typedef int32_t (dsp_type_process)(int32_t sample, dsp_unit *du);
+typedef int32_t (dsp_type_process)(int32_t sample, dsp_parm *dp, dsp_unit *du);
 
 int32_t dsp_process_all_units(int32_t sample);
 void dsp_unit_struct_zero(dsp_unit *du);
 void dsp_unit_initialize(int dsp_unit_number, dsp_unit_type dut);
 
-extern const void * const dsp_unit_struct_defaults[];
+extern const void * const dsp_parm_struct_defaults[];
+extern dsp_parm dsp_parms[MAX_DSP_UNITS];
 extern dsp_unit dsp_units[MAX_DSP_UNITS];
 
 inline dsp_unit *dsp_unit_entry(uint e)
 {
     return &dsp_units[e];
+}
+
+inline dsp_parm *dsp_parm_entry(uint e)
+{
+    return &dsp_parms[e];
 }
 
 typedef struct
@@ -588,14 +731,14 @@ typedef struct
     uint8_t    digits;
     uint32_t   minval;
     uint32_t   maxval;
-} dsp_type_configuration_entry;
+} dsp_parm_configuration_entry;
 
 bool dsp_unit_set_value(uint dsp_unit_number, const char *desc, uint32_t value);
 bool dsp_unit_get_value(uint dsp_unit_number, const char *desc, uint32_t *value);
 dsp_unit_type dsp_unit_get_type(uint dsp_unit_number);
-const dsp_type_configuration_entry *dsp_unit_get_configuration_entry(uint dsp_unit_number, uint num);
+const dsp_parm_configuration_entry *dsp_unit_get_configuration_entry(uint dsp_unit_number, uint num);
 
-extern const dsp_type_configuration_entry * const dtce[];
+extern const dsp_parm_configuration_entry * const dpce[];
 extern const char * const dtnames[];
 
 uint32_t dsp_read_value_prec(void *v, int prec);

@@ -268,20 +268,20 @@ void adjust_parms(uint8_t unit_no)
     button_clear();
     for (;;)
     {
-        const dsp_type_configuration_entry *d = dtce[dsp_units[unit_no].dtn.dut];
+        const dsp_parm_configuration_entry *d = dpce[dsp_parms[unit_no].dtn.dut];
         idle_task();
         if (redraw)
         {
             if (sel == 0)
             {
                 write_str_with_spaces(0,2,"Type",16);
-                write_str_with_spaces(0,3,dtnames[dsp_units[unit_no].dtn.dut],16);
+                write_str_with_spaces(0,3,dtnames[dsp_parms[unit_no].dtn.dut],16);
             } else
             {
                 char s[20];
                 write_str_with_spaces(0,2,d[sel-1].desc,16);
                 char *c = number_str(s, 
-                    dsp_read_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size), 
+                    dsp_read_value_prec((void *)(((uint8_t *)&dsp_parms[unit_no]) + d[sel-1].offset), d[sel-1].size), 
                     d[sel-1].digits, 0);
                 write_str_with_spaces(0,3,c,16);
             }
@@ -310,7 +310,7 @@ void adjust_parms(uint8_t unit_no)
             {
                 write_str_with_spaces(0,2,"Type select",16);
                 menu_str mst = { dtnames,0,3,10,0,0 };
-                mst.item = mst.itemesc = dsp_units[unit_no].dtn.dut;
+                mst.item = mst.itemesc = dsp_parms[unit_no].dtn.dut;
                 int res;
                 do_show_menu_item(&mst);
                 do
@@ -320,7 +320,7 @@ void adjust_parms(uint8_t unit_no)
                 } while (res == 0);
                 if (res == 3)
                 {
-                    if (mst.item != dsp_units[unit_no].dtn.dut)
+                    if (mst.item != dsp_parms[unit_no].dtn.dut)
                     {
                         dsp_unit_initialize(unit_no, (dsp_unit_type)mst.item);
                         dsp_unit_reset_all();
@@ -334,7 +334,7 @@ void adjust_parms(uint8_t unit_no)
                                           d[sel-1].minval,
                                           d[sel-1].maxval,
                                           0,
-                                          dsp_read_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size),
+                                          dsp_read_value_prec((void *)(((uint8_t *)&dsp_parms[unit_no]) + d[sel-1].offset), d[sel-1].size),
                                           0, 0 };
                 scroll_number_start(&snd);
                 do
@@ -343,7 +343,7 @@ void adjust_parms(uint8_t unit_no)
                     scroll_number_key(&snd);
                 } while (!snd.entered);
                 if (snd.changed)
-                   dsp_set_value_prec((void *)(((uint8_t *)&dsp_units[unit_no]) + d[sel-1].offset), d[sel-1].size, snd.n);
+                   dsp_set_value_prec((void *)(((uint8_t *)&dsp_parms[unit_no]) + d[sel-1].offset), d[sel-1].size, snd.n);
             }
             redraw = 1;
         }
@@ -367,7 +367,7 @@ void adjust_dsp_params(void)
             write_str(0,0,"DSP Adj");
             sprintf(s,"Unit #%d", unit_no+1);
             write_str_with_spaces(0,1,s,16);
-            write_str_with_spaces(0,2,dtnames[dsp_units[unit_no].dtn.dut],16);
+            write_str_with_spaces(0,2,dtnames[dsp_parms[unit_no].dtn.dut],16);
             display_refresh();
             redraw = 0;
         }
@@ -400,7 +400,7 @@ int main2();
 #define FLASH_PAGE_BYTES 4096u
 #define FLASH_OFFSET_STORED (2*1024*1024)
 #define FLASH_BASE_ADR 0x10000000
-#define FLASH_MAGIC_NUMBER 0xFEECFEDE
+#define FLASH_MAGIC_NUMBER 0xFEE1FEDE
 
 #define FLASH_PAGES(x) ((((x)+(FLASH_PAGE_BYTES-1))/FLASH_PAGE_BYTES)*FLASH_PAGE_BYTES)
 
@@ -414,7 +414,7 @@ typedef struct _flash_layout_data
     uint32_t magic_number;
     uint32_t gen_no;
     uint8_t  desc[16];
-    dsp_unit dsp_units[MAX_DSP_UNITS];
+    dsp_parm dsp_parms[MAX_DSP_UNITS];
 } flash_layout_data;
 
 typedef union _flash_layout
@@ -554,7 +554,7 @@ int flash_load_bank(uint bankno)
         if (fl->fld.gen_no > last_gen_no)
             last_gen_no = fl->fld.gen_no;
         memcpy(desc, fl->fld.desc, sizeof(desc));
-        memcpy((void *)dsp_units, (void *) &fl->fld.dsp_units, sizeof(dsp_units));
+        memcpy((void *)dsp_parms, (void *) &fl->fld.dsp_parms, sizeof(dsp_parms));
         dsp_unit_reset_all();
     } else return -1;
     return 0;
@@ -650,7 +650,7 @@ int flash_save_bank(uint bankno)
     fl->fld.magic_number = FLASH_MAGIC_NUMBER;
     fl->fld.gen_no = (++last_gen_no);
     memcpy(fl->fld.desc, desc, sizeof(fl->fld.desc));
-    memcpy((void *)&fl->fld.dsp_units, (void *)dsp_units, sizeof(fl->fld.dsp_units));
+    memcpy((void *)&fl->fld.dsp_parms, (void *)dsp_parms, sizeof(fl->fld.dsp_parms));
     int ret = write_data_to_flash(flash_offset_bank(bankno), (uint8_t *) fl, 1, sizeof(flash_layout));
     free(fl);
     return ret;
@@ -872,24 +872,24 @@ int init_cmd(int args, tinycl_parameter* tp, void *v)
   return 1;
 }
 
-void conf_entry_print(uint unit_no, const dsp_type_configuration_entry *dtce)
+void conf_entry_print(uint unit_no, const dsp_parm_configuration_entry *dpce)
 {
     uint32_t value;
     char s[60];
     sprintf(s,"SET %u ",unit_no+1);
     tinycl_put_string(s);    
-    tinycl_put_string(dtce->desc);
-    if (!dsp_unit_get_value(unit_no, dtce->desc, &value)) value = 0;
-    sprintf(s," %u %u %u\r\n",value,dtce->minval,dtce->maxval);
+    tinycl_put_string(dpce->desc);
+    if (!dsp_unit_get_value(unit_no, dpce->desc, &value)) value = 0;
+    sprintf(s," %u %u %u\r\n",value,dpce->minval,dpce->maxval);
     tinycl_put_string(s);
 }
 
- const dsp_type_configuration_entry *conf_entry_lookup_print(uint unit_no, uint entry_no)
+ const dsp_parm_configuration_entry *conf_entry_lookup_print(uint unit_no, uint entry_no)
  {
-    const dsp_type_configuration_entry *dtce = dsp_unit_get_configuration_entry(unit_no, entry_no);
-    if (dtce == NULL) return NULL;
-    conf_entry_print(unit_no, dtce);
-    return dtce;
+    const dsp_parm_configuration_entry *dpce = dsp_unit_get_configuration_entry(unit_no, entry_no);
+    if (dpce == NULL) return NULL;
+    conf_entry_print(unit_no, dpce);
+    return dpce;
  }
 
 int conf_cmd(int args, tinycl_parameter* tp, void *v)

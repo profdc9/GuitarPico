@@ -8450,7 +8450,7 @@
   (gr_text "POWER\n7-12 VDC\nPIN -" (at 46.425 114.725 270) (layer "F.SilkS") (tstamp 2f6ffd79-8540-46c9-a473-ad44e23bb86c)
     (effects (font (size 1 1) (thickness 0.15)))
   )
-  (gr_text "GUITAR PICO\nBY DANIEL MARKS\nCC-BY-SA 4.0" (at 101.97 113.91) (layer "F.SilkS") (tstamp 30b29240-9d54-4e24-8d76-933c6f7c6652)
+  (gr_text "GUITAR PICO\nBY DANIEL MARKS\nCC-BY-SA 4.0\nVERSION 2" (at 101.97 113.91) (layer "F.SilkS") (tstamp 30b29240-9d54-4e24-8d76-933c6f7c6652)
     (effects (font (size 1 1) (thickness 0.15)))
   )
   (gr_text "VGA" (at 135.07 87.88 90) (layer "F.SilkS") (tstamp 3898807f-7435-40a4-b284-21d0013fa8d3)
