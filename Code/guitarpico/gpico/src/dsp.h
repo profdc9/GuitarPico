@@ -30,17 +30,15 @@ extern "C"
 {
 #endif
 
+#define DSP_SAMPLERATE 25000u
+
+#define QUANTIZATION_BITS 15
+#define QUANTIZATION_MAX (1<<QUANTIZATION_BITS)
+#define QUANTIZATION_MAX_FLOAT ((float)(1<<QUANTIZATION_BITS))
+
 #define MAX_DSP_UNITS 16
 
 #define MATH_PI_F 3.1415926535f
-#define SINE_TABLE_ENTRIES (1 << 8)
-
-extern int32_t sine_table[];
-void initialize_sine_table(void);
-inline int32_t sine_table_entry(int n)
-{
-    return sine_table[n & (SINE_TABLE_ENTRIES-1)];
-};
 
 #define SAMPLE_CIRC_BUF_SIZE (1u<<15)
 #define SAMPLE_CIRC_BUF_CLEAN_SIZE (1u<<15)
@@ -448,7 +446,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t  gain, level, nlevel;
+    int32_t  gain, level;
     uint32_t skip;
     uint32_t pot_value1;
     uint32_t pot_value2;
@@ -731,6 +729,7 @@ typedef struct
     uint8_t    digits;
     uint32_t   minval;
     uint32_t   maxval;
+    const char *controldesc;
 } dsp_parm_configuration_entry;
 
 bool dsp_unit_set_value(uint dsp_unit_number, const char *desc, uint32_t value);
@@ -746,6 +745,34 @@ void dsp_set_value_prec(void *v, int prec, uint32_t val);
 
 void dsp_unit_reset(int dsp_unit_number);
 void dsp_unit_reset_all(void);
+
+/************Float to quantized integer offset instructions *******************************/
+
+inline float nyquist_fraction_omega(uint16_t frequency)
+{
+    return ((float)frequency)*(2.0f*MATH_PI_F/((float)DSP_SAMPLERATE));
+}
+
+inline float Q_value(uint16_t Q)
+{
+    return (((float)Q)*0.01f);
+}
+
+/* Q = 100 means Q scaled to one */
+inline float float_a_value(float omega_value, uint16_t Q)
+{
+    return sinf(omega_value)*(50.0f)/((float)Q);
+}
+
+inline int32_t float_to_sampled_int(float x)
+{
+    return (int32_t)(QUANTIZATION_MAX_FLOAT*x+0.5f);
+}
+
+inline int16_t fractional_int_remove_offset(int32_t x)
+{
+    return (int32_t)(x/QUANTIZATION_MAX);
+}
 
 #ifdef __cplusplus
 }

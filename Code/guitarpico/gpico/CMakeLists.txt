@@ -17,6 +17,7 @@ add_executable(gpico
     src/tinycl.cpp
     src/usbmain.c
     src/usb_descriptors.c
+    src/waves.c
 )
 
 add_picovga(gpico)

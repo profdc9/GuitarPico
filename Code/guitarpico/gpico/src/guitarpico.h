@@ -73,6 +73,7 @@ extern "C"
 uint16_t read_potentiometer_value(uint v);
 
 #define POTENTIOMETER_VALUE_SENSITIVITY 20
+#define POTENTIOMETER_MAX 6
 
 #ifdef __cplusplus
 }

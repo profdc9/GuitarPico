@@ -24,7 +24,7 @@ It includes the following effects:
 16.  Compressor (amplifies weak signals to equal out overall amplitude of signal)
 17.  Ring (ring modulator using low frequency oscillator)
 18.  Flanger (pitch modulated by a low frequency oscillator, with feedback and combined with unmodulated signal)
-19.   Chorus (pitch modulated by a low frequency oscillator, no feedback and combined with unmodulated signal)
+19.  Chorus (pitch modulated by a low frequency oscillator, no feedback and combined with unmodulated signal)
 20.  Phaser (signal run through multiple stages of all pass filters, combined with unmodulated signal)
 21.  Backwards (plays the last samples backwards for weird swooping effect)
 22.  PitchShift (allows shifting the pitch by variable amounts, useful for harmony-like effect)
@@ -32,7 +32,7 @@ It includes the following effects:
 24.  Octave (rectification and amplification of the signal with extreme distortion)
 25.  Sinusoidal Oscillator (built in test signal source)
 
-The effects may be cascaded, to up to 16 in a sequence.  The settings of a particular sequence of effects may be saved in flash memory.  
+The effects may be cascaded, to up to 16 in a sequence.  The settings of a particular sequence of effects may be saved in flash memory.  Because the effects are processed one sample at a time in real-time, the lag due to the processing is only 50 microseconds.
 
 There is a stomp pedal which may be used to one of four saved settings, based on which of the four buttons is stomped on.  It does not require power to operate.
 
@@ -40,11 +40,11 @@ The pedal has four potentiometers that may be assigned to control various aspect
 
 There is also a feature to determine the frequency and note being played, to help with tuning a guitar.  Also, if plugged into USB, notes played on the guitar are sent as MIDI events to the PC to turn the guitar into a MIDI instruments.  However, this feature is imperfect (but this useful for tuning).
 
-As well as a MIDI device, the guitar pedal appears as a COM port.  The effect settings may be retrieved from the pedal or programmed into the pedal through this interface using text commands at a prompt.  Type "HELP" for a list of the commands.
+As well as a MIDI device, the guitar pedal appears as a COM port.  The effect settings may be retrieved from the pedal or programmed into the pedal through this interface using text commands at a prompt.  Type "HELP" for a list of the commands.  For example, typing "CONF 0 0" lists all of the current effects configuration data.  The data is output in the form of the commands used to reprogram the same state back into the device, so these may be directly copied into a text file and pasted back into a terminal to recreate the configuration.
 
 There is also a VGA port that will be used to implement video effects.
 
-The hardware is licensed under CC-BY-SA 4.0 and software under the zlib license, both open source licenses.
+The hardware is licensed under CC-BY-SA 4.0 and software under the zlib license (no warranty, yes commercial and noncommercial use), both open source licenses.
 
 ![Picture](Pics/GuitarPicoPic.jpg)
 ![Picture](Pics/StompBox.jpg)
