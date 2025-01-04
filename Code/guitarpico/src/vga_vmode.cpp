@@ -8,6 +8,7 @@
 #include "pico/stdlib.h"
 #include "pico/printf.h"
 #include "pico/multicore.h"
+#include "hardware/clocks.h"
 #include "picovga.h"
 
 

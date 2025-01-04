@@ -25,6 +25,10 @@
 #ifndef _GUITARPICO_H
 #define _GUITARPICO_H
 
+#include "pico.h"
+#include "pico/stdlib.h"
+#include "pico/multicore.h"
+#include "hardware/clocks.h"
 #include "hardware/pio.h"
 #include "hardware/pwm.h"
 #include "hardware/adc.h"
@@ -32,7 +36,6 @@
 #include "hardware/timer.h"
 #include "hardware/sync.h"
 #include "hardware/flash.h"
-#include "pico/multicore.h"
 
 #define DMB() __dmb()
 

@@ -28,9 +28,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
-#include "dsp.h"
 #include "guitarpico.h"
-#include "Waves.h"
+#include "waves.h"
+#include "dsp.h"
 
 int sample_circ_buf_offset;
 int16_t sample_circ_buf[SAMPLE_CIRC_BUF_SIZE];
